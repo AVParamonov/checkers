@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,12 +27,12 @@ public class GameService {
     @Autowired
     private PlayerService playerService;
 
-    public void createGame(Player player1, Player player2) {
-        Game game = Game.builder()
+    public Game createGame(Player player1, Player player2) {
+        Game game = gameRepository.save(Game.builder()
                 .board(boardService.initBoard())
-                .players(Arrays.asList(player1, player2))
-                .build();
-        gameRepository.save(game);
+                .player1(player1)
+                .player2(player2)
+                .build());
 
         List<Checker> redCheckers = game.getBoard().getCells().stream()
                 .filter(c -> c.getChecker() != null)
@@ -52,8 +53,18 @@ public class GameService {
             player2.setCheckers(redCheckers);
             player1.setCheckers(blackCheckers);
         }
-        playerService.update(player1);
-        playerService.update(player2);
+
+        player1.setCurrentGame(game);
+        player2.setCurrentGame(game);
+
+        playerService.saveOrUpdate(player1);
+        playerService.saveOrUpdate(player2);
+
+        return game;
+    }
+
+    public Game saveOrUpdate(Game game) {
+        return gameRepository.save(game);
     }
 
     public List<Game> findAll() {

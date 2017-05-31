@@ -25,7 +25,7 @@ public class Checker {
     long id;
 
     @Enumerated
-    CheckerType type = CheckerType.REGULAR;
+    CheckerType type;
 
     @Enumerated
     Side side;

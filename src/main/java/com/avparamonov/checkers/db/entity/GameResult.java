@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.util.List;
 
 /**
- * Board entity.
+ * Game entity.
  *
  * Created by AVParamonov on 25.05.17.
  */
@@ -17,21 +17,18 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "boards")
-public class Board {
+@Table(name = "game_results")
+public class GameResult {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    @Column(name = "board_id")
+    @Column(name = "game_result_id")
     long id;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    List<Cell> cells;
+    @OneToOne
+    Game game;
 
-    @Override
-    public String toString() {
-        return "com.avparamonov.checkers.db.entity.Board(id=" + this.getId()
-                + ", cells=" + this.getCells() + ")";
-    }
+    @ManyToOne
+    Player winner;
 
 }

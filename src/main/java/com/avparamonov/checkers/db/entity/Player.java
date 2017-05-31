@@ -41,4 +41,23 @@ public class Player {
     @OneToMany(fetch = FetchType.EAGER)
     List<Checker> checkers;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    Game currentGame;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    List<GameResult> gameResults;
+
+    @Override
+    public String toString() {
+        return "com.avparamonov.checkers.db.entity.Player(id=" + this.getId()
+                + ", nickname=" + this.getNickname()
+                + ", age=" + this.getAge()
+                + ", type=" + this.getType()
+                + ", side=" + this.getSide()
+                + ", isActive=" + this.isActive()
+                + ", checkers=" + this.getCheckers()
+                + ", currentGame=" + this.getCurrentGame().getId()
+                + ", gameResults=" + this.getGameResults() + ")";
+    }
+
 }

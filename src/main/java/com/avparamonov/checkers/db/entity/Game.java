@@ -25,11 +25,22 @@ public class Game {
     @Column(name = "game_id")
     long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "game_id")
     Board board;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    List<Player> players;
+    @ManyToOne
+    Player player1;
+
+    @ManyToOne
+    Player player2;
+
+    @Override
+    public String toString() {
+        return "com.avparamonov.checkers.db.entity.Game(id=" + this.getId()
+                + ", board=" + this.getBoard().getId()
+                + ", player1=" + this.getPlayer1().getId()
+                + ", player2=" + this.getPlayer2().getId() + ")";
+    }
 
 }

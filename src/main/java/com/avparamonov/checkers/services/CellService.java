@@ -16,14 +16,14 @@ public class CellService {
     @Autowired
     private CellRepository cellRepository;
 
-    public Cell createInPosition(int row, int col) {
-        Cell cell = new Cell();
-        cell.setRow(row);
-        cell.setCol(col);
-        return cellRepository.save(cell);
+    public Cell createWithPosition(int row, int col) {
+        return cellRepository.save(Cell.builder()
+                .row(row)
+                .col(col)
+                .build());
     }
 
-    public Cell update(Cell cell) {
+    public Cell saveOrUpdate(Cell cell) {
         return cellRepository.save(cell);
     }
 }

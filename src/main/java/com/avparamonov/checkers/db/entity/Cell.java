@@ -28,11 +28,8 @@ public class Cell {
 
     int col;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "checker_id")
     Checker checker;
-
-    @Column(name = "is_occupied")
-    boolean isOccupied;
 
 }
