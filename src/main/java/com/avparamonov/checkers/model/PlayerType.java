@@ -1,4 +1,4 @@
-package com.avparamonov.checkers.db.entity;
+package com.avparamonov.checkers.model;
 
 /**
  * Created by andrey.paramonov@sigma.software on 22.05.17.
@@ -6,8 +6,7 @@ package com.avparamonov.checkers.db.entity;
 public enum PlayerType {
 
     HUMAN("Human"),
-    COMPUTER("Computer"),
-    NOT_KNOWN("Player type not known");
+    COMPUTER("Computer");
 
     private String value;
 

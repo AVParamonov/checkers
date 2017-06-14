@@ -1,18 +1,13 @@
 package com.avparamonov.checkers.services;
 
-import com.avparamonov.checkers.db.dao.BoardRepository;
-import com.avparamonov.checkers.db.entity.*;
-import com.avparamonov.checkers.exceptions.CellNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.avparamonov.checkers.model.*;
+import com.avparamonov.checkers.model.db.entity.Player;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static com.avparamonov.checkers.db.entity.CheckerType.*;
-import static com.avparamonov.checkers.db.entity.Side.*;
+import static com.avparamonov.checkers.model.CheckerType.*;
+import static com.avparamonov.checkers.model.Side.*;
 
 /**
  * Board service.
@@ -22,181 +17,179 @@ import static com.avparamonov.checkers.db.entity.Side.*;
 @Service
 public class BoardService {
 
-    @Autowired
-    private BoardRepository boardRepository;
-
-    @Autowired
-    private CellService cellService;
-
-    @Autowired
-    private CheckerService checkerService;
-
-    private List<Cell> availableMoves;
-    private List<Cell> availableJumps;
-
-    public Board initBoard() {
-        List<Cell> cells = IntStream.range(1, 9)
-                .mapToObj(r -> IntStream.range(1, 9)
-                        .filter(c -> (r % 2 != 0 && c % 2 != 0) || (r % 2 == 0 && c % 2 == 0))
-                        .mapToObj(c -> {
-                            Cell cell = cellService.createWithPosition(r, c);
-
-                            if (((r == 1 | r == 3) && c % 2 != 0) || (r == 2 && c % 2 == 0)) {
-                                cell.setChecker(checkerService.createWithSide(BLACK));
-
-                            } else if (((r == 6 | r == 8) && c % 2 == 0) || (r == 7 && c % 2 != 0)) {
-                                cell.setChecker(checkerService.createWithSide(RED));
-                            }
-
-                            return cellService.saveOrUpdate(cell);
-                        })
-                        .collect(Collectors.toList()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-
-        return boardRepository.save(Board.builder()
-                .cells(cells)
-                .build());
+    private enum Directions {
+        UP_LEFT,
+        UP_RIGHT,
+        DOWN_RIGHT,
+        DOWN_LEFT
     }
 
-    public void makeMove(Cell fromCell, Cell toCell) {
-        Assert.notNull(fromCell.getChecker());
+    public void makeMove(Checker[][] board, Move move) {
+        board[move.getToRow()][move.getToCol()] = board[move.getFromRow()][move.getFromCol()];
+        board[move.getFromRow()][move.getFromCol()] = null;
 
-        Checker checker = fromCell.getChecker();
-        int borderRow = toCell.getRow();
+        Checker enemyToRemove = move.getEnemyToRemove();
+        if (enemyToRemove != null) {
+            board[enemyToRemove.getRow()][enemyToRemove.getCol()] = null;
+        }
 
-        // became a KING
-        if (checker.getType() == REGULAR) {
-            if ((borderRow == 1 && checker.getSide() == RED) || (borderRow == 8 && checker.getSide() == BLACK)) {
-                checker.setType(KING);
-                checkerService.saveOrUpdate(checker);
+        if (move.getToRow() == 0 || move.getToRow() == 7) {
+            board[move.getToRow()][move.getToCol()].setType(CheckerType.KING);
+        }
+    }
+
+    public List<Move> getAvailableMoves(Player player, Checker[][] board) {
+        List<Move> jumps = new ArrayList<>();
+        List<Move> moves = new ArrayList<>();
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Checker checker = board[row][col];
+                if (checker == null || checker.getSide() != player.getSide()) {
+                    continue;
+                }
+                if (checker.getType() == REGULAR) {
+                    for (Directions direction: Directions.values()) {
+                        Move move = getRegularMoveInDirection(direction, board, row, col);
+                        if (move != null) {
+                            if (move.isJump()) {
+                                jumps.add(move);
+                            } else {
+                                moves.add(move);
+                            }
+                        }
+                    }
+                } else {
+                    for (Directions direction: Directions.values()) {
+                        jumps.addAll(getKingJumpsInDirection(direction, board, row, col));
+                        moves.addAll(getKingMovesInDirection(direction, board, row, col));
+                    }
+                }
             }
         }
-        fromCell.setChecker(null);
-        cellService.saveOrUpdate(fromCell);
-
-        toCell.setChecker(checker);
-        cellService.saveOrUpdate(toCell);
-    }
-
-    public void makeJump(Cell fromCell, Cell overCell, Cell toCell) {
-        Assert.notNull(fromCell.getChecker());
-
-        Checker checker = fromCell.getChecker();
-        fromCell.setChecker(null);
-        cellService.saveOrUpdate(fromCell);
-
-        Checker enemyChecker = overCell.getChecker();
-        if (enemyChecker != null) {
-            overCell.setChecker(null);
-            checkerService.remove(enemyChecker);
-        }
-
-        toCell.setChecker(checker);
-        cellService.saveOrUpdate(toCell);
-    }
-
-    public List<Cell> collectRegularMoves(List<Cell> emptyCells, Cell fromCell) {
-        Side side = fromCell.getChecker().getSide();
-        return emptyCells.stream()
-                // distance is one column long
-                .filter(c -> Math.abs(c.getCol() - fromCell.getCol()) == 1)
-                // moves are in right direction and distance is one row long
-                .filter(c -> (side == BLACK && c.getRow() - fromCell.getRow() == 1)
-                             || (side == RED && fromCell.getRow() - c.getRow() == 1))
-                .collect(Collectors.toList());
-    }
-
-    public List<Cell> collectKingMoves(List<Cell> emptyCells, Cell fromCell) {
-        return emptyCells.stream()
-                // diagonal route
-                .filter(c -> (Math.abs(c.getRow() - fromCell.getRow()) == Math.abs(c.getCol() - fromCell.getCol())))
-                .collect(Collectors.toList());
-    }
-
-    public List<Cell> collectRegularJumps(Board board, Cell fromCell) {
-        return board.getCells().stream()
-                // jump cells
-                .filter(c -> (Math.abs(c.getRow() - fromCell.getRow()) == 2 && Math.abs(c.getCol() - fromCell.getCol()) == 2))
-                .filter(c -> c.getChecker() == null)
-                .filter(j -> {
-                    int row = (j.getRow() + fromCell.getRow()) / 2;
-                    int col = (j.getCol() + fromCell.getCol()) / 2;
-                    return board.getCells().stream()
-                            // find cell
-                            .filter(c -> c.getRow() == row && c.getCol() == col)
-                            .filter(c -> c.getChecker() != null)
-                            // enemy
-                            .anyMatch(e -> e.getChecker().getSide() != fromCell.getChecker().getSide());
-                })
-                .collect(Collectors.toList());
-    }
-
-    public boolean collectKingJumps(List<Cell> emptyCells, Cell fromCell) {
-        int fromRow = fromCell.getRow();
-        int fromCol = fromCell.getCol();
-
-        List<Cell> kingMoves = collectKingMoves(emptyCells, fromCell);
-
-//        kingMoves.stream()
-//
-//        // if diagonal route
-//        if (Math.abs(toRow - fromRow) == Math.abs(toCol - fromCol)) {
-//            if (Math.abs(fromRow - toRow) >= 2 && Math.abs(fromCol - toCol) >= 2) {
-//                if () {
-//                    return true;
-//                }
-//            }
-//        }
-        return false;
-    }
-
-    public List<Cell> getMoves(Board board, Checker checker) {
-        List<Cell> moves = new ArrayList<>();
-        Cell currentCell = null;
-        try {
-            currentCell = getCell(board, checker);
-        } catch (CellNotFoundException e) {
-            e.printStackTrace();
-        }
-        List<Cell> emptyCells = board.getCells().stream()
-                .filter(c -> c.getChecker() == null)
-                .collect(Collectors.toList());
-
-        if (checker.getType() == CheckerType.REGULAR) {
-            moves = collectRegularMoves(emptyCells, currentCell);
-        } else if (checker.getType() == CheckerType.KING) {
-            moves = collectKingMoves(emptyCells, currentCell);
-        }
-        return moves;
-    }
-
-    public List<Cell> getJumps(Board board, Checker checker) {
-        List<Cell> jumps = new ArrayList<>();
-        Cell currentCell = null;
-        try {
-            currentCell = getCell(board, checker);
-        } catch (CellNotFoundException e) {
-            e.printStackTrace();
-        }
-        List<Cell> emptyCells = board.getCells().stream()
-                .filter(c -> c.getChecker() == null)
-                .collect(Collectors.toList());
-
-        if (checker.getType() == CheckerType.REGULAR) {
-            jumps = collectRegularJumps(board, currentCell);
-//        } else if (checker.getType() == CheckerType.KING) {
-//            jumps = collectKingMoves(emptyCells, currentCell);
+        if (jumps.isEmpty()) {
+            return moves;
         }
         return jumps;
     }
 
-    private Cell getCell(Board board, Checker checker) throws CellNotFoundException {
-        return board.getCells().stream()
-                .filter(c -> c.getChecker() != null)
-                .filter(c -> c.getChecker().equals(checker))
-                .findFirst()
-                .orElseThrow(() -> new CellNotFoundException("Cell not found for Checker with id='" + checker.getId()
-                        + "' on Board with id='" + board.getId()+ "'"));
+    private Move getRegularMove(Checker[][] board, int row, int col, int rowSign, int colSign) {
+        int enemyRow = row + rowSign;
+        int enemyCol = col + colSign;
+        int jumpRow = row + 2 * rowSign;
+        int jumpCol = col + 2 * colSign;
+
+        if (isAtBoard(enemyRow, enemyCol)) {
+            Checker checker = board[enemyRow][enemyCol];
+            if (checker != null && isAtBoard(jumpRow, jumpCol)) {
+                if (checker.getSide() != board[row][col].getSide() && board[jumpRow][jumpCol] == null) {
+                    Move jump = new Move(row, col, jumpRow, jumpCol);
+                    jump.setEnemyToRemove(checker);
+                    return jump;
+                }
+            } else if (isAllowedDirection(board, row, col, enemyRow, enemyCol)) {
+                return new Move(row, col, enemyRow, enemyCol);
+            }
+        }
+        return null;
+    }
+
+    private List<Move> getKingMoves(Checker[][] board, int row, int col, int rowSign, int colSign) {
+        List<Move> moves = new ArrayList<>();
+        int i = 1;
+        while (isAtBoard(row + i * rowSign, col + i * colSign)) {
+            if (board[row + i * rowSign][col + i * colSign] == null) {
+                moves.add(new Move(row, col, row + i * rowSign, col + i * colSign));
+            }
+            i++;
+        }
+        return moves;
+    }
+
+    private List<Move> getKingJumps(Checker[][] board, int row, int col, int rowSign, int colSign, Directions oppositeDirection) {
+        List<Move> jumps = new ArrayList<>();
+        Move jump;
+        int jumpRow;
+        int jumpCol;
+        int i = 1;
+        while (isAtBoard(row + i * rowSign, col + i * colSign)) {
+            Checker checker = board[row + i * rowSign][col + i * colSign];
+            if (checker != null && checker.getSide() != board[row][col].getSide()) {
+                int j = i;
+//                jumpRow = row + (j + 1) * rowSign;
+//                jumpCol = col + (j + 1) * colSign;
+                while (isAtBoard(row + (j + 1) * rowSign, col + (j + 1) * colSign) && board[row + (j + 1) * rowSign][col + (j + 1) * colSign] == null) {
+                    jump = new Move(row, col, row + (j + 1) * rowSign, col + (j + 1) * colSign);
+                    jump.setEnemyToRemove(checker);
+                    jumps.add(jump);
+                    j++;
+                    for (Directions direction: Directions.values()) {
+                        if (direction.equals(oppositeDirection)) {
+                            continue;
+                        }
+                        jumps.addAll(getKingJumpsInDirection(direction, board, row + (j + 1) * rowSign, col + (j + 1) * colSign));
+                    }
+                }
+            }
+            i++;
+        }
+        return jumps;
+    }
+
+    private Move getRegularMoveInDirection(Directions direction, Checker[][] board, int row, int col) {
+        switch (direction) {
+            case UP_LEFT:
+                return getRegularMove(board, row, col, 1, -1);
+            case UP_RIGHT:
+                return getRegularMove(board, row, col, 1, 1);
+            case DOWN_RIGHT:
+                return getRegularMove(board, row, col, -1, 1);
+            case DOWN_LEFT:
+                return getRegularMove(board, row, col, -1, -1);
+            default:
+                return null;
+        }
+    }
+
+    private List<Move> getKingMovesInDirection(Directions direction, Checker[][] board, int row, int col) {
+        switch (direction) {
+            case UP_LEFT:
+                return getKingMoves(board, row, col, 1, -1);
+            case UP_RIGHT:
+                return getKingMoves(board, row, col, 1, 1);
+            case DOWN_RIGHT:
+                return getKingMoves(board, row, col, -1, 1);
+            case DOWN_LEFT:
+                return getKingMoves(board, row, col, -1, -1);
+            default:
+                return Collections.emptyList();
+        }
+    }
+
+    private List<Move> getKingJumpsInDirection(Directions direction, Checker[][] board, int row, int col) {
+        switch (direction) {
+            case UP_LEFT:
+                return getKingJumps(board, row, col, 1, -1, Directions.DOWN_RIGHT);
+            case UP_RIGHT:
+                return getKingJumps(board, row, col, 1, 1, Directions.DOWN_LEFT);
+            case DOWN_RIGHT:
+                return getKingJumps(board, row, col, -1, 1, Directions.UP_LEFT);
+            case DOWN_LEFT:
+                return getKingJumps(board, row, col, -1, -1, Directions.UP_RIGHT);
+            default:
+                return Collections.emptyList();
+        }
+    }
+
+    private boolean isAtBoard(int row, int col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    private boolean isAllowedDirection(Checker[][] board, int fromRow, int fromCol, int toRow, int toCol) {
+        if (board[fromRow][fromCol].getSide() == WHITE) {
+            return toRow > fromRow;
+        } else {
+            return toRow < fromRow;
+        }
     }
 }

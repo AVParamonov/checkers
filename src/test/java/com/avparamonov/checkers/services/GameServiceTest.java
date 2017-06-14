@@ -1,8 +1,9 @@
 package com.avparamonov.checkers.services;
 
 import com.avparamonov.checkers.Application;
-import com.avparamonov.checkers.db.dao.*;
-import com.avparamonov.checkers.db.entity.*;
+import com.avparamonov.checkers.model.*;
+import com.avparamonov.checkers.model.db.dao.PlayerRepository;
+import com.avparamonov.checkers.model.db.entity.Player;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -11,12 +12,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static com.avparamonov.checkers.db.entity.CheckerType.*;
-import static com.avparamonov.checkers.db.entity.Side.*;
 
 
 /**
@@ -33,19 +28,7 @@ public class GameServiceTest {
     private PlayerService playerService;
 
     @Autowired
-    private GameRepository gameRepository;
-
-    @Autowired
     private PlayerRepository playerRepository;
-
-    @Autowired
-    private BoardRepository boardRepository;
-
-    @Autowired
-    private CellRepository cellRepository;
-
-    @Autowired
-    private CheckerRepository checkerRepository;
 
     private Player player1;
     private Player player2;
@@ -53,74 +36,62 @@ public class GameServiceTest {
 
     @Before
     public void setUp() {
-        player1 = Player.builder()
-                .nickname("Player1")
-                .age(25)
-                .type(PlayerType.HUMAN)
-                .side(Side.BLACK)
-                .build();
-        playerRepository.save(player1);
-
-        player2 = Player.builder()
-                .nickname("Player2")
-                .type(PlayerType.COMPUTER)
-                .side(Side.RED)
-                .build();
-        playerRepository.save(player2);
-
+        player1 = playerService.create("Tom", PlayerType.HUMAN, Side.WHITE);
+        player2 = playerService.create("Jerry", PlayerType.COMPUTER, Side.BLACK);
     }
 
     @Test
     public void testCreateGame() throws Exception {
-        game = gameService.createGame(player1, player2);
+        game = gameService.createGame("Tom", "Jerry");
 
-        List<Game> games = (List<Game>) gameRepository.findAll();
-        List<Player> players = (List<Player>) playerRepository.findAll();
-        List<Board> boards = (List<Board>) boardRepository.findAll();
-        List<Cell> cells = (List<Cell>) cellRepository.findAll();
-        List<Checker> checkers = (List<Checker>) checkerRepository.findAll();
-
-        Assert.assertEquals(1, games.size());
-        Assert.assertEquals(2, players.size());
-        Assert.assertEquals(1, boards.size());
-        Assert.assertEquals(32, cells.size());
-        Assert.assertEquals(24, checkers.size());
     }
 
     @Test
-    public void testMakeJump() throws Exception {
-        game = gameService.createGame(player1, player2);
+    public void testMakeRegularJump() throws Exception {
+        game = gameService.createGame("Tom", "Jerry");
 
-        List<Cell> cells = game.getBoard().getCells();
-        cells.forEach(c -> c.setChecker(null));
-        cellRepository.save(cells);
-        gameRepository.save(game);
+        Checker[][] board = game.getBoard();
 
-        Checker chb1 = Checker.builder().side(BLACK).type(REGULAR).build();
-        Checker chb2 = Checker.builder().side(BLACK).type(REGULAR).build();
-        Checker chr1 = Checker.builder().side(RED).type(REGULAR).build();
-        checkerRepository.save(Arrays.asList(chb1, chb2, chr1));
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                board[row][col] = null;
+            }
+        }
+        board[2][4] = Checker.builder().row(2).col(4).side(Side.WHITE).type(CheckerType.REGULAR).build();
+        board[3][3] = Checker.builder().row(3).col(3).side(Side.BLACK).type(CheckerType.REGULAR).build();
 
-        game.getBoard().getCells().forEach(c -> {
-            if (c.getRow() == 2 && c.getCol() == 4) c.setChecker(chb1);
-            if (c.getRow() == 3 && c.getCol() == 5) c.setChecker(chb2);
-            if (c.getRow() == 4 && c.getCol() == 4) c.setChecker(chr1);
-        });
+        Assert.assertNotNull(board[3][3]);
 
-        Cell cb2 = game.getBoard().getCells().stream().filter(c -> (c.getRow() == 3 && c.getCol() == 5)).findFirst().get();
-        Cell cb4 = game.getBoard().getCells().stream().filter(c -> (c.getRow() == 5 && c.getCol() == 3)).findFirst().get();
+        Move jump = new Move(2, 4, 4, 2);
+        gameService.makeMove(player1, jump, game);
 
-        playerService.pickCell(player1, cb2);
-//        playerService.makeMove(player1, cb2, cb4);
+        Assert.assertNull(board[3][3]);
+    }
+
+    @Test
+    public void testMakeKingJump() throws Exception {
+        game = gameService.createGame("Tom", "Jerry");
+
+        Checker[][] board = game.getBoard();
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                board[row][col] = null;
+            }
+        }
+        board[2][4] = Checker.builder().row(2).col(4).side(Side.WHITE).type(CheckerType.KING).build();
+        board[3][3] = Checker.builder().row(3).col(3).side(Side.BLACK).type(CheckerType.REGULAR).build();
+
+        Assert.assertNotNull(board[3][3]);
+
+        Move jump = new Move(2, 4, 5, 1);
+        gameService.makeMove(player1, jump, game);
+
+        Assert.assertNull(board[3][3]);
     }
 
     @After
     public void tearDown() {
-//        checkerRepository.deleteAll();
-//        cellRepository.deleteAll();
-//        boardRepository.deleteAll();
-//        playerRepository.deleteAll();
-//        gameRepository.deleteAll();
+        playerRepository.deleteAll();
     }
-
 }

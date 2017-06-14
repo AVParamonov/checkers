@@ -1,4 +1,4 @@
-package com.avparamonov.checkers.db.entity;
+package com.avparamonov.checkers.model;
 
 /**
  * Checker type enum.
