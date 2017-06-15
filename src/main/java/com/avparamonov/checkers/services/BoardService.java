@@ -18,10 +18,22 @@ import static com.avparamonov.checkers.model.Side.*;
 public class BoardService {
 
     private enum Directions {
-        UP_LEFT,
-        UP_RIGHT,
-        DOWN_RIGHT,
-        DOWN_LEFT
+        UP_LEFT(new int[] {1, -1}, "DOWN_RIGHT"),
+        UP_RIGHT(new int[] {1, 1}, "DOWN_LEFT"),
+        DOWN_RIGHT(new int[] {-1, 1}, "UP_LEFT"),
+        DOWN_LEFT(new int[] {-1, -1}, "UP_RIGHT");
+
+        private final int[] signs;
+        private final String oppositeDirection;
+
+        Directions(int[] signs, String oppositeDirection) {
+            this.signs = signs;
+            this.oppositeDirection = oppositeDirection;
+        }
+
+        public int[] getSigns() { return signs; }
+
+        public String getOpposite() { return this.oppositeDirection; }
     }
 
     public void makeMove(Checker[][] board, Move move) {
@@ -50,7 +62,7 @@ public class BoardService {
                 }
                 if (checker.getType() == REGULAR) {
                     for (Directions direction: Directions.values()) {
-                        Move move = getRegularMoveInDirection(direction, board, row, col);
+                        Move move = getRegularMove(board, row, col, direction.getSigns()[0], direction.getSigns()[1]);
                         if (move != null) {
                             if (move.isJump()) {
                                 jumps.add(move);
@@ -61,8 +73,11 @@ public class BoardService {
                     }
                 } else {
                     for (Directions direction: Directions.values()) {
-                        jumps.addAll(getKingJumpsInDirection(direction, board, row, col));
-                        moves.addAll(getKingMovesInDirection(direction, board, row, col));
+                        int rowSign = direction.getSigns()[0];
+                        int colSign = direction.getSigns()[1];
+                        Directions oppositeDirection = Directions.valueOf(direction.getOpposite());
+                        jumps.addAll(getKingJumps(board, row, col, rowSign, colSign, oppositeDirection));
+                        moves.addAll(getKingMoves(board, row, col, rowSign, colSign));
                     }
                 }
             }
@@ -81,12 +96,10 @@ public class BoardService {
 
         if (isAtBoard(enemyRow, enemyCol)) {
             Checker checker = board[enemyRow][enemyCol];
-            if (checker != null && isAtBoard(jumpRow, jumpCol)) {
-                if (checker.getSide() != board[row][col].getSide() && board[jumpRow][jumpCol] == null) {
-                    Move jump = new Move(row, col, jumpRow, jumpCol);
-                    jump.setEnemyToRemove(checker);
-                    return jump;
-                }
+            if (checker != null && isAtBoard(jumpRow, jumpCol) && checker.getSide() != board[row][col].getSide() && board[jumpRow][jumpCol] == null) {
+                Move jump = new Move(row, col, jumpRow, jumpCol);
+                jump.setEnemyToRemove(checker);
+                return jump;
             } else if (isAllowedDirection(board, row, col, enemyRow, enemyCol)) {
                 return new Move(row, col, enemyRow, enemyCol);
             }
@@ -109,76 +122,42 @@ public class BoardService {
     private List<Move> getKingJumps(Checker[][] board, int row, int col, int rowSign, int colSign, Directions oppositeDirection) {
         List<Move> jumps = new ArrayList<>();
         Move jump;
+        int enemyRow;
+        int enemyCol;
         int jumpRow;
         int jumpCol;
-        int i = 1;
-        while (isAtBoard(row + i * rowSign, col + i * colSign)) {
-            Checker checker = board[row + i * rowSign][col + i * colSign];
-            if (checker != null && checker.getSide() != board[row][col].getSide()) {
-                int j = i;
-//                jumpRow = row + (j + 1) * rowSign;
-//                jumpCol = col + (j + 1) * colSign;
-                while (isAtBoard(row + (j + 1) * rowSign, col + (j + 1) * colSign) && board[row + (j + 1) * rowSign][col + (j + 1) * colSign] == null) {
-                    jump = new Move(row, col, row + (j + 1) * rowSign, col + (j + 1) * colSign);
-                    jump.setEnemyToRemove(checker);
-                    jumps.add(jump);
-                    j++;
-                    for (Directions direction: Directions.values()) {
-                        if (direction.equals(oppositeDirection)) {
-                            continue;
+
+        for (int i = 1; i < 8; i++) {
+            enemyRow = row + i * rowSign;
+            enemyCol = col + i * colSign;
+            if (isAtBoard(enemyRow, enemyCol) && isEnemy(board, row, col, enemyRow, enemyCol)) {
+                Checker checker = board[enemyRow][enemyCol];
+                for (int j = i; j < 8; j++) {
+                    jumpRow = row + (j + 1) * rowSign;
+                    jumpCol = col + (j + 1) * colSign;
+                    if (isAtBoard(jumpRow, jumpCol) && board[jumpRow][jumpCol] == null) {
+                        jump = new Move(row, col, jumpRow, jumpCol);
+                        jump.setEnemyToRemove(checker);
+                        jumps.add(jump);
+                        for (Directions direction: Directions.values()) {
+                            if (direction.equals(oppositeDirection)) {
+                                continue;
+                            }
+                            int rSign = direction.getSigns()[0];
+                            int cSign = direction.getSigns()[1];
+                            Directions opposite = Directions.valueOf(direction.getOpposite());
+                            jumps.addAll(getKingJumps(board, jumpRow, jumpCol, rSign, cSign, opposite));
                         }
-                        jumps.addAll(getKingJumpsInDirection(direction, board, row + (j + 1) * rowSign, col + (j + 1) * colSign));
                     }
                 }
             }
-            i++;
         }
         return jumps;
     }
 
-    private Move getRegularMoveInDirection(Directions direction, Checker[][] board, int row, int col) {
-        switch (direction) {
-            case UP_LEFT:
-                return getRegularMove(board, row, col, 1, -1);
-            case UP_RIGHT:
-                return getRegularMove(board, row, col, 1, 1);
-            case DOWN_RIGHT:
-                return getRegularMove(board, row, col, -1, 1);
-            case DOWN_LEFT:
-                return getRegularMove(board, row, col, -1, -1);
-            default:
-                return null;
-        }
-    }
-
-    private List<Move> getKingMovesInDirection(Directions direction, Checker[][] board, int row, int col) {
-        switch (direction) {
-            case UP_LEFT:
-                return getKingMoves(board, row, col, 1, -1);
-            case UP_RIGHT:
-                return getKingMoves(board, row, col, 1, 1);
-            case DOWN_RIGHT:
-                return getKingMoves(board, row, col, -1, 1);
-            case DOWN_LEFT:
-                return getKingMoves(board, row, col, -1, -1);
-            default:
-                return Collections.emptyList();
-        }
-    }
-
-    private List<Move> getKingJumpsInDirection(Directions direction, Checker[][] board, int row, int col) {
-        switch (direction) {
-            case UP_LEFT:
-                return getKingJumps(board, row, col, 1, -1, Directions.DOWN_RIGHT);
-            case UP_RIGHT:
-                return getKingJumps(board, row, col, 1, 1, Directions.DOWN_LEFT);
-            case DOWN_RIGHT:
-                return getKingJumps(board, row, col, -1, 1, Directions.UP_LEFT);
-            case DOWN_LEFT:
-                return getKingJumps(board, row, col, -1, -1, Directions.UP_RIGHT);
-            default:
-                return Collections.emptyList();
-        }
+    private boolean isEnemy(Checker[][] board, int row, int col, int enemyRow, int enemyCol) {
+        return board[row][col] != null && board[enemyRow][enemyCol] != null
+                && board[row][col].getSide() != board[enemyRow][enemyCol].getSide();
     }
 
     private boolean isAtBoard(int row, int col) {
