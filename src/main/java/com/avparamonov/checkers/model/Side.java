@@ -1,12 +1,14 @@
-package com.avparamonov.checkers.db.entity;
+package com.avparamonov.checkers.model;
 
 /**
- * Created by andrey.paramonov@sigma.software on 22.05.17.
+ * Player's or Checker's side.
+ *
+ * Created by AVParamonov on 22.05.17.
  */
 public enum Side {
 
-    BLACK(1),
-    RED(2);
+    WHITE(1),
+    BLACK(2);
 
     private int id;
 

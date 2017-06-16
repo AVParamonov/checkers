@@ -1,9 +1,8 @@
 package com.avparamonov.checkers.services;
 
-import com.avparamonov.checkers.db.dao.CheckerRepository;
-import com.avparamonov.checkers.db.entity.Checker;
-import com.avparamonov.checkers.db.entity.Side;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.avparamonov.checkers.model.Checker;
+import com.avparamonov.checkers.model.CheckerType;
+import com.avparamonov.checkers.model.Side;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,16 +13,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class CheckerService {
 
-    private final CheckerRepository checkerRepository;
-
-    @Autowired
-    public CheckerService(CheckerRepository checkerRepository) {
-        this.checkerRepository = checkerRepository;
+    public Checker createWithSideAndCoordinates(Side side, int row, int col) {
+        return Checker.builder()
+                .row(row)
+                .col(col)
+                .type(CheckerType.REGULAR)
+                .side(side)
+                .build();
     }
 
-    public Checker create(Side side) {
-        Checker checker = new Checker();
-        checker.setSide(side);
-        return checkerRepository.save(checker);
-    }
 }

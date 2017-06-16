@@ -1,5 +1,7 @@
-package com.avparamonov.checkers.db.entity;
+package com.avparamonov.checkers.model.db.entity;
 
+import com.avparamonov.checkers.model.PlayerType;
+import com.avparamonov.checkers.model.Side;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -23,22 +25,18 @@ public class Player {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name = "player_id")
-    long id;
+    int id;
 
+    String firstName;
+    String lastName;
+
+    @Column(unique = true)
     String nickname;
 
-    int age;
-
     @Enumerated(EnumType.STRING)
-    PlayerType type = PlayerType.NOT_KNOWN;
+    PlayerType type;
 
     @Enumerated
     Side side;
-
-    @Column(name = "is_active")
-    boolean isActive;
-
-    @OneToMany(fetch = FetchType.EAGER)
-    List<Checker> checkers;
 
 }
