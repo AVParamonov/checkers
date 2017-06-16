@@ -1,5 +1,6 @@
 package com.avparamonov.checkers.services;
 
+import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.*;
 import com.avparamonov.checkers.model.db.dao.PlayerRepository;
 import com.avparamonov.checkers.model.db.entity.Player;
@@ -36,12 +37,17 @@ public class PlayerService {
                 .build());
     }
 
-    public Player findPlayerByNickname(String nickname) {
-        return playerRepository.findByNickname(nickname);
+    public Player findPlayerByNickname(String nickname) throws PlayerNotFoundException {
+        return playerRepository.findByNickname(nickname).orElseThrow(() ->
+                new PlayerNotFoundException("Player not found with nickname='" + nickname +  "'"));
     }
 
-    public Player findPlayerById(int id) {
-        return playerRepository.findOne(id);
+    public Player findPlayerById(int id) throws PlayerNotFoundException {
+        Player player = playerRepository.findOne(id);
+        if (player == null) {
+            throw new PlayerNotFoundException("Player not found with id='" + id +  "'");
+        }
+        return player;
     }
 
     public List<Move> getAvailableMoves(Player player, Game game) {

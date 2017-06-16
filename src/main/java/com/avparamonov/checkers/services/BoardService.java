@@ -17,25 +17,6 @@ import static com.avparamonov.checkers.model.Side.*;
 @Service
 public class BoardService {
 
-    private enum Directions {
-        UP_LEFT(new int[] {1, -1}, "DOWN_RIGHT"),
-        UP_RIGHT(new int[] {1, 1}, "DOWN_LEFT"),
-        DOWN_RIGHT(new int[] {-1, 1}, "UP_LEFT"),
-        DOWN_LEFT(new int[] {-1, -1}, "UP_RIGHT");
-
-        private final int[] signs;
-        private final String oppositeDirection;
-
-        Directions(int[] signs, String oppositeDirection) {
-            this.signs = signs;
-            this.oppositeDirection = oppositeDirection;
-        }
-
-        public int[] getSigns() { return signs; }
-
-        public String getOpposite() { return this.oppositeDirection; }
-    }
-
     public void makeMove(Checker[][] board, Move move) {
         int fromRow = move.getFromRow();
         int fromCol = move.getFromCol();
@@ -59,8 +40,8 @@ public class BoardService {
         List<Move> jumps = new ArrayList<>();
         List<Move> moves = new ArrayList<>();
 
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board.length; col++) {
                 Checker checker = board[row][col];
                 if (checker == null || checker.getSide() != player.getSide()) {
                     continue;
@@ -84,12 +65,12 @@ public class BoardService {
         int toCol;
         int rowSign = direction.getSigns()[0];
         int colSign = direction.getSigns()[1];
-        int depth = (checker.getType() == REGULAR) ? 2 : 8;
+        int depth = (checker.getType() == REGULAR) ? 2 : board.length;
 
         for (int i = 1; i < depth; i++) {
             toRow = row + i * rowSign;
             toCol = col + i * colSign;
-            if (isAtBoard(toRow, toCol) && board[toRow][toCol] == null) {
+            if (isAtBoard(board.length, toRow, toCol) && board[toRow][toCol] == null) {
                 if (checker.getType() == KING) {
                     moves.add(new Move(row, col, toRow, toCol));
                 } else if (isForward(checker.getSide(), row, toRow)) {
@@ -107,19 +88,19 @@ public class BoardService {
         int enemyCol;
         int jumpRow;
         int jumpCol;
-        int depth = (checkerType == REGULAR) ? 2 : 8;
+        int depth = (checkerType == REGULAR) ? 2 : board.length;
         int rowSign = direction.getSigns()[0];
         int colSign = direction.getSigns()[1];
-        Directions oppositeDirection = Directions.valueOf(direction.getOpposite());
+        Directions oppositeDirection = direction.getOpposite();
 
         for (int i = 1; i < depth; i++) {
             enemyRow = row + i * rowSign;
             enemyCol = col + i * colSign;
-            if (isAtBoard(enemyRow, enemyCol) && isEnemy(board, row, col, enemyRow, enemyCol)) {
+            if (isAtBoard(board.length, enemyRow, enemyCol) && isEnemy(board, row, col, enemyRow, enemyCol)) {
                 for (int j = i; j < depth; j++) {
                     jumpRow = row + (j + 1) * rowSign;
                     jumpCol = col + (j + 1) * colSign;
-                    if (isAtBoard(jumpRow, jumpCol) && board[jumpRow][jumpCol] == null) {
+                    if (isAtBoard(board.length, jumpRow, jumpCol) && board[jumpRow][jumpCol] == null) {
                         jump = new Move(row, col, jumpRow, jumpCol);
                         jump.setEnemyToRemove(board[enemyRow][enemyCol]);
                         jumps.add(jump);
@@ -141,8 +122,8 @@ public class BoardService {
                 && board[row][col].getSide() != board[enemyRow][enemyCol].getSide();
     }
 
-    private boolean isAtBoard(int row, int col) {
-        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    private boolean isAtBoard(int size, int row, int col) {
+        return row >= 0 && row < size && col >= 0 && col < size;
     }
 
     private boolean isForward(Side checkerSide, int fromRow, int toRow) {

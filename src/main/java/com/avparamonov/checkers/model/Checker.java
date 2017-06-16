@@ -3,8 +3,6 @@ package com.avparamonov.checkers.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-
 /**
  * Checker entity.
  *

@@ -3,7 +3,7 @@ package com.avparamonov.checkers.model;
 /**
  * Checker type enum.
  *
- * Created by andrey.paramonov@sigma.software on 25.05.17.
+ * Created by AVParamonov on 25.05.17.
  */
 public enum CheckerType {
 

@@ -1,10 +1,10 @@
 package com.avparamonov.checkers.model;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Checker's move.
@@ -13,6 +13,7 @@ import java.util.Objects;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(exclude={"enemyToRemove"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Move {
 
@@ -33,26 +34,4 @@ public class Move {
         return getEnemyToRemove() != null;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Move move = (Move) o;
-
-        if (fromRow != move.fromRow) return false;
-        if (fromCol != move.fromCol) return false;
-        if (toRow != move.toRow) return false;
-        return toCol == move.toCol;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = 17;
-        result = 31 * result + fromRow;
-        result = 31 * result + fromCol;
-        result = 31 * result + toRow;
-        result = 31 * result + toCol;
-        return result;
-    }
 }
