@@ -9,7 +9,8 @@ public enum GameStatus {
 
     READY(1),
     IN_PROGRESS(2),
-    FINISHED(3);
+    FINISHED(3),
+    FORBIDDEN(4);
 
     private int id;
 

@@ -1,18 +1,19 @@
 package com.avparamonov.checkers.services;
 
+import com.avparamonov.checkers.exceptions.CheckerNotFoundException;
+import com.avparamonov.checkers.exceptions.GameNotFoundException;
+import com.avparamonov.checkers.exceptions.MoveNotAllowedException;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.*;
 import com.avparamonov.checkers.model.db.dao.PlayerRepository;
 import com.avparamonov.checkers.model.db.entity.Player;
-import com.avparamonov.checkers.exceptions.CheckerNotFoundException;
-import com.avparamonov.checkers.exceptions.MoveNotAllowedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import static com.avparamonov.checkers.model.GameStatus.*;
 
 /**
  * Player service.
@@ -24,6 +25,9 @@ public class PlayerService {
 
     @Autowired
     private BoardService boardService;
+
+    @Autowired
+    private GameService gameService;
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -51,8 +55,48 @@ public class PlayerService {
     }
 
     public List<Move> getAvailableMoves(Player player, Game game) {
-        return boardService.getAvailableMoves(player, game.getBoard());
+        List<Move> jumps = new ArrayList<>();
+        List<Move> moves = new ArrayList<>();
+        Checker[][] board = game.getBoard();
+
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board.length; col++) {
+                Checker checker = board[row][col];
+                if (checker == null || checker.getSide() != player.getSide()) {
+                    continue;
+                }
+                for (Directions direction: Directions.values()) {
+                    jumps.addAll(boardService.getJumps(board, row, col, checker.getType(), direction));
+                    moves.addAll(boardService.getMoves(board, row, col, direction));
+                }
+            }
+        }
+        if (jumps.isEmpty()) {
+            return moves;
+        }
+        return jumps;
     }
 
+    public Game makeMove(Player player, Move move, Game game) throws MoveNotAllowedException, CheckerNotFoundException {
+        Player opponent = game.getPlayer1().equals(player) ? game.getPlayer2() : game.getPlayer1();
+        List<Move> moves = getAvailableMoves(player, game);
 
+        Move exactMove = moves.stream()
+                .filter(m -> m.equals(move))
+                .findFirst().orElseThrow(() -> new MoveNotAllowedException("Move " + move + " not allowed."));
+
+        boardService.apply(game.getBoard(), exactMove);
+        game.setStatus(IN_PROGRESS);
+
+        List<Move> opponentMoves = getAvailableMoves(opponent, game);
+        game.setCurrentPlayerAvailableMoves(opponentMoves);
+
+        if (opponentMoves.isEmpty()) {
+            // Game finishes, opponent lost
+            game = gameService.finish(game.getId());
+        }
+
+        game.setCurrentPlayer(opponent);
+        return game;
+    }
 }

@@ -18,9 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 
 
-/**
- * Created by AVParamonov on 26.05.17.
- */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 public class GameServiceTest {
@@ -55,7 +52,7 @@ public class GameServiceTest {
         Assert.assertNotNull(game.getBoard());
         Assert.assertEquals(player1, game.getPlayer1());
         Assert.assertEquals(player2, game.getPlayer2());
-        Assert.assertEquals(game, gameService.getCurrentGames().get(game.getId()));
+        Assert.assertEquals(game, gameService.findById(game.getId()));
     }
 
     @Test
@@ -71,7 +68,7 @@ public class GameServiceTest {
         Assert.assertEquals(playerChecker, board[2][4]);
         Assert.assertEquals(enemyChecker, board[3][3]);
 
-        gameService.makeMove(player1, jump, game);
+        playerService.makeMove(player1, jump, game);
 
         Assert.assertNull(board[3][3]);
         Assert.assertNull(board[2][4]);
@@ -92,7 +89,7 @@ public class GameServiceTest {
         Assert.assertEquals(checker1, board[2][4]);
         Assert.assertEquals(checker2, board[3][3]);
 
-        gameService.makeMove(player1, move, game);
+        playerService.makeMove(player1, move, game);
 
         Assert.assertEquals(checker1, board[3][5]);
     }
@@ -110,7 +107,7 @@ public class GameServiceTest {
         Assert.assertEquals(playerKingChecker, board[2][4]);
         Assert.assertEquals(enemyChecker, board[3][3]);
 
-        gameService.makeMove(player1, jump, game);
+        playerService.makeMove(player1, jump, game);
 
         Assert.assertNull(board[3][3]);
         Assert.assertNull(board[2][4]);
@@ -130,7 +127,7 @@ public class GameServiceTest {
         Assert.assertEquals(playerKingChecker, board[2][4]);
         Assert.assertEquals(playerOtherChecker, board[3][3]);
 
-        gameService.makeMove(player1, jump, game);
+        playerService.makeMove(player1, jump, game);
 
         Assert.assertNull(board[2][4]);
         Assert.assertEquals(playerOtherChecker, board[3][3]);

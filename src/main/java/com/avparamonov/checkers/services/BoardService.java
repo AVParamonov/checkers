@@ -1,7 +1,8 @@
 package com.avparamonov.checkers.services;
 
+import com.avparamonov.checkers.exceptions.CheckerNotFoundException;
 import com.avparamonov.checkers.model.*;
-import com.avparamonov.checkers.model.db.entity.Player;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,16 +18,45 @@ import static com.avparamonov.checkers.model.Side.*;
 @Service
 public class BoardService {
 
-    public void makeMove(Checker[][] board, Move move) {
+    @Autowired
+    private CheckerService checkerService;
+
+    public void init(Checker[][] board) {
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board.length; col++) {
+                if ( row % 2 == col % 2 ) {
+                    if (row < 3) {
+                        board[row][col] = checkerService.createWithSideAndCoordinates(WHITE, row, col);
+                    }
+                    else if (row > board.length - 4) {
+                        board[row][col] = checkerService.createWithSideAndCoordinates(BLACK, row, col);
+                    }
+                    else {
+                        board[row][col] = null;
+                    }
+                }
+                else {
+                    board[row][col] = null;
+                }
+            }
+        }
+    }
+
+    public void apply(Checker[][] board, Move move) throws CheckerNotFoundException {
         int fromRow = move.getFromRow();
         int fromCol = move.getFromCol();
         int toRow = move.getToRow();
         int toCol = move.getToCol();
+        Checker checker = board[fromRow][fromCol];
+        if (checker == null) {
+            throw new CheckerNotFoundException("Checker not found at position with row='" +
+                    fromRow + "' and column='" + fromCol + "'");
+        }
+        Checker enemyToRemove = move.getEnemyToRemove();
 
-        board[toRow][toCol] = board[fromRow][fromCol];
+        board[toRow][toCol] = checker;
         board[fromRow][fromCol] = null;
 
-        Checker enemyToRemove = move.getEnemyToRemove();
         if (enemyToRemove != null) {
             board[enemyToRemove.getRow()][enemyToRemove.getCol()] = null;
         }
@@ -36,29 +66,7 @@ public class BoardService {
         }
     }
 
-    public List<Move> getAvailableMoves(Player player, Checker[][] board) {
-        List<Move> jumps = new ArrayList<>();
-        List<Move> moves = new ArrayList<>();
-
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board.length; col++) {
-                Checker checker = board[row][col];
-                if (checker == null || checker.getSide() != player.getSide()) {
-                    continue;
-                }
-                for (Directions direction: Directions.values()) {
-                    jumps.addAll(getJumps(board, row, col, checker.getType(), direction));
-                    moves.addAll(getMoves(board, row, col, direction));
-                }
-            }
-        }
-        if (jumps.isEmpty()) {
-            return moves;
-        }
-        return jumps;
-    }
-
-    private List<Move> getMoves(Checker[][] board, int row, int col, Directions direction) {
+    public List<Move> getMoves(Checker[][] board, int row, int col, Directions direction) {
         List<Move> moves = new ArrayList<>();
         Checker checker = board[row][col];
         int toRow;
@@ -81,7 +89,7 @@ public class BoardService {
         return moves;
     }
 
-    private List<Move> getJumps(Checker[][] board, int row, int col, CheckerType checkerType, Directions direction) {
+    public List<Move> getJumps(Checker[][] board, int row, int col, CheckerType checkerType, Directions direction) {
         List<Move> jumps = new ArrayList<>();
         Move jump;
         int enemyRow;
@@ -118,7 +126,7 @@ public class BoardService {
     }
 
     private boolean isEnemy(Checker[][] board, int row, int col, int enemyRow, int enemyCol) {
-        return board[row][col] != null && board[enemyRow][enemyCol] != null
+        return board[enemyRow][enemyCol] != null
                 && board[row][col].getSide() != board[enemyRow][enemyCol].getSide();
     }
 

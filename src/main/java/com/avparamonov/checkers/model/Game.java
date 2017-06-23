@@ -6,11 +6,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-/**
- * Game entity.
- *
- * Created by AVParamonov on 25.05.17.
- */
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,6 +22,7 @@ public class Game {
     Player player1;
     Player player2;
     Player currentPlayer;
+    List<Move> currentPlayerAvailableMoves;
     GameType type;
     GameStatus status;
 
