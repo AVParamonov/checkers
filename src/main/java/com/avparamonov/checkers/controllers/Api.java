@@ -13,6 +13,6 @@ public interface Api {
         String VERSION = "/v1";
         String CREATE_PLAYER = VERSION + "/player";
         String CREATE_GAME = VERSION + "/game";
-        String MAKE_MOVE = VERSION + "/game/{gameId}/player/{playerId}/move/{fromRow}/fromCol}/{toRow}/{toCol}";
+        String MAKE_MOVE = VERSION + "/game/{gameId}/player/{playerId}/move";
     }
 }

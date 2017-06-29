@@ -30,7 +30,7 @@ public class PlayerController {
         return playerService.create(nickname, PlayerType.HUMAN, Side.valueOf(side.toUpperCase()));
     }
 
-    @RequestMapping(value = Api.V1.MAKE_MOVE, method = RequestMethod.PUT)
+    @RequestMapping(value = Api.V1.MAKE_MOVE, method = RequestMethod.POST)
     @SneakyThrows
     public Game makeMove(@RequestParam(value = "fromRow") int fromRow,
                          @RequestParam(value = "fromCol") int fromCol,

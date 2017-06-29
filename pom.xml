@@ -20,8 +20,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <docker.image.name>checkers_app</docker.image.name>
-        <docker.image.tag>latest</docker.image.tag>
+        <!--<docker.image.name>checkers_app</docker.image.name>-->
+        <!--<docker.image.tag>latest</docker.image.tag>-->
     </properties>
 
     <dependencies>

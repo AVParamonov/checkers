@@ -1,7 +1,6 @@
 package com.avparamonov.checkers.services;
 
 import com.avparamonov.checkers.exceptions.CheckerNotFoundException;
-import com.avparamonov.checkers.exceptions.GameNotFoundException;
 import com.avparamonov.checkers.exceptions.MoveNotAllowedException;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.*;
@@ -83,7 +82,7 @@ public class PlayerService {
 
         Move exactMove = moves.stream()
                 .filter(m -> m.equals(move))
-                .findFirst().orElseThrow(() -> new MoveNotAllowedException("Move " + move + " not allowed."));
+                .findFirst().orElseThrow(() -> new MoveNotAllowedException(move + " not allowed."));
 
         boardService.apply(game.getBoard(), exactMove);
         game.setStatus(IN_PROGRESS);

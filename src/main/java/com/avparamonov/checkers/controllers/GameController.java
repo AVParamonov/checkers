@@ -24,4 +24,10 @@ public class GameController {
         return gameService.createGame(nickname1, nickname2, GameType.valueOf(gameType.toUpperCase()));
     }
 
+    @RequestMapping(value = Api.V1.CREATE_GAME, method = RequestMethod.GET)
+    @SneakyThrows
+    public Game findGame(@RequestParam(value = "gameId") String gameId) {
+
+        return gameService.findById(gameId);
+    }
 }
