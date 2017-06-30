@@ -12,7 +12,7 @@ public interface Api {
     interface V1 {
         String VERSION = "/v1";
         String CREATE_PLAYER = VERSION + "/player";
-        String CREATE_GAME = VERSION + "/game";
-        String MAKE_MOVE = VERSION + "/game/{gameId}/player/{playerId}/move";
+        String CREATE_GAME = VERSION + "/currentGame";
+        String MAKE_MOVE = VERSION + "/currentGame/{gameId}/player/{playerId}/move";
     }
 }

@@ -64,6 +64,9 @@ public class BoardService {
             checker.setType(CheckerType.KING);
         }
 
+        checker.setRow(toRow);
+        checker.setCol(toCol);
+
         board[toRow][toCol] = checker;
         board[fromRow][fromCol] = null;
 
@@ -132,7 +135,8 @@ public class BoardService {
     }
 
     private boolean isEnemy(Checker[][] board, int row, int col, int enemyRow, int enemyCol) {
-        return board[enemyRow][enemyCol] != null && board[row][col].getSide() != board[enemyRow][enemyCol].getSide();
+        return board[enemyRow][enemyCol] != null && board[row][col] != null
+                && board[row][col].getSide() != board[enemyRow][enemyCol].getSide();
     }
 
     private boolean isAtBoard(int size, int row, int col) {

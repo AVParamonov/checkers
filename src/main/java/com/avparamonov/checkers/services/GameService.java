@@ -4,15 +4,14 @@ import com.avparamonov.checkers.exceptions.GameNotFoundException;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.Checker;
 import com.avparamonov.checkers.model.Game;
-import com.avparamonov.checkers.model.GameStatus;
 import com.avparamonov.checkers.model.GameType;
 import com.avparamonov.checkers.model.db.entity.Player;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+import static com.avparamonov.checkers.model.GameStatus.*;
 import static com.avparamonov.checkers.model.Side.WHITE;
 
 /**
@@ -43,6 +42,7 @@ public class GameService {
                 .player1(player1)
                 .player2(player2)
                 .type(gameType)
+                .status(READY)
                 .currentPlayer(player1.getSide() == WHITE ? player1 : player2)
                 .build();
 
@@ -64,7 +64,7 @@ public class GameService {
 
     public Game finish(String gameId) {
         Game game = getCurrentGames().get(gameId);
-        game.setStatus(GameStatus.FINISHED);
+        game.setStatus(FINISHED);
         getCurrentGames().remove(gameId);
         return game;
     }
