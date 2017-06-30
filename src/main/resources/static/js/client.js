@@ -76,7 +76,7 @@ $(document).click(function(e) {
 
 function createNewGame() {
     return $.post(
-        'checkers/v1/currentGame',
+        'checkers/v1/game',
         {
             nickname1: "Tom",
             nickname2: "Jerry",
@@ -90,7 +90,7 @@ function makeMove(gameId, playerId, fromCell, toCell) {
     var fromCol = parseInt(fromCell.charAt(1));
     var toRow = parseInt(toCell.charAt(0));
     var toCol = parseInt(toCell.charAt(1));
-    var url = 'checkers/v1/currentGame/' + gameId + '/player/' + playerId + '/move';
+    var url = 'checkers/v1/game/' + gameId + '/player/' + playerId + '/move';
     return $.post(
         url,
         {
