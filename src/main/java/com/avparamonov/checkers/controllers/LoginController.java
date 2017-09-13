@@ -2,6 +2,7 @@ package com.avparamonov.checkers.controllers;
 
 import javax.validation.Valid;
 
+import com.avparamonov.checkers.dto.GameRequest;
 import com.avparamonov.checkers.dto.PlayerRequest;
 import com.avparamonov.checkers.model.db.entity.Player;
 import com.avparamonov.checkers.services.PlayerService;
@@ -51,6 +52,7 @@ public class LoginController {
             modelAndView.setViewName("registration");
         } else {
             playerService.create(player);
+            modelAndView.addObject("gameRequest", new GameRequest());
             modelAndView.setViewName("home");
             securityService.autoLogin(player.getNickname(), player.getPassword());
         }

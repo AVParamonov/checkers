@@ -32,7 +32,7 @@ import static java.util.Optional.ofNullable;
  * Created by AVParamonov on 26.05.17.
  */
 @Service
-public class PlayerService implements UserDetailsService {
+public class PlayerService {
 
     @Autowired
     private BoardService boardService;
@@ -52,6 +52,7 @@ public class PlayerService implements UserDetailsService {
                 .setPassword(bCryptPasswordEncoder.encode(player.getPassword()))
                 .setRole(Role.fromName(player.getRole()))
                 .setType(PlayerType.HUMAN)
+                .setActive(true)
         );
     }
 
@@ -122,20 +123,6 @@ public class PlayerService implements UserDetailsService {
             p.setSide(side);
             playerRepository.save(p);
         });
-    }
-
-    @Override
-    @Transactional
-    public UserDetails loadUserByUsername(String nickname) throws UsernameNotFoundException {
-        Player player = findPlayerByNickname(nickname);
-        if (player == null) {
-            throw new UsernameNotFoundException("Nickname " + nickname + " not found.");
-        }
-
-        Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
-        grantedAuthorities.add(new SimpleGrantedAuthority(player.getRole().name()));
-
-        return new org.springframework.security.core.userdetails.User(player.getNickname(), player.getPassword(), player.isActive(), true, true, true, grantedAuthorities);
     }
 
 }

@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Checkers Game</title>
+    <title>Checkers Game home page</title>
     <link rel="stylesheet" href="../static/css/main.css" th:href="@{/css/main.css}"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
     <script type="text/javascript" src="webjars/jquery/3.2.1/jquery.min.js"></script>
@@ -13,7 +13,7 @@
     <div class="row">
         <div class="col-md-5 col-md-offset-4">
             <form autocomplete="off" action="#" th:action="@{/checkers/v1/game}" th:object="${gameRequest}" method="post" class="form-horizontal" role="form">
-                <h2>Registration Form</h2>
+                <h2>Game creation form</h2>
                 <div class="form-group">
                     <div class="col-sm-9">
                         <label	th:if="${#fields.hasErrors('whiteCheckersNickname')}" th:errors="*{whiteCheckersNickname}" class="validation-message"></label>

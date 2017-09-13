@@ -21,16 +21,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Autowired
+    private UserDetailsService userDetailsService;
 
-    @Override
-    public UserDetailsService userDetailsServiceBean() throws Exception {
-        return new PlayerService();
-    }
 
-    @Override
-    protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
+    @Autowired
+    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth
-                .userDetailsService(userDetailsServiceBean())
+                .userDetailsService(userDetailsService)
                 .passwordEncoder(bCryptPasswordEncoder);
     }
 

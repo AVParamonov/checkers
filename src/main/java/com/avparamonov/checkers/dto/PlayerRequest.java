@@ -20,7 +20,7 @@ public class PlayerRequest {
     @NotBlank(message = "Please provide your nickname")
     String nickname;
 
-    @Length(min = 8, message = "*Your password must have at least 8 characters")
+    @Length(min = 5, message = "*Your password must have at least 5 characters")
     @NotBlank(message = "Please provide your password")
     String password;
 
