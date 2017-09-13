@@ -11,8 +11,14 @@ public interface Api {
 
     interface V1 {
         String VERSION = "/v1";
-        String CREATE_PLAYER = VERSION + "/player";
-        String CREATE_GAME = VERSION + "/game";
+//        String PLAYER = VERSION + "/player";
+        String REGISTRATION = VERSION + "/registration";
+        String ADMIN = VERSION + "/admin";
+        String LOGIN = VERSION + "/login";
+        String LOGOUT = VERSION + "/logout";
+        String ERROR = VERSION + "/error";
+        String HOME = VERSION + "/home";
+        String GAME = VERSION + "/game";
         String MAKE_MOVE = VERSION + "/game/{gameId}/player/{playerId}/move";
     }
 }

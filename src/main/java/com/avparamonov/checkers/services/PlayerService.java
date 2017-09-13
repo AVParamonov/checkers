@@ -4,15 +4,27 @@ import com.avparamonov.checkers.exceptions.CheckerNotFoundException;
 import com.avparamonov.checkers.exceptions.MoveNotAllowedException;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.*;
-import com.avparamonov.checkers.model.db.dao.PlayerRepository;
+import com.avparamonov.checkers.model.db.Role;
+import com.avparamonov.checkers.model.db.repository.PlayerRepository;
 import com.avparamonov.checkers.model.db.entity.Player;
+import com.avparamonov.checkers.dto.PlayerRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.avparamonov.checkers.model.GameStatus.*;
+import static java.util.Optional.ofNullable;
 
 /**
  * Player service.
@@ -20,29 +32,35 @@ import static com.avparamonov.checkers.model.GameStatus.*;
  * Created by AVParamonov on 26.05.17.
  */
 @Service
-public class PlayerService {
+public class PlayerService implements UserDetailsService {
 
     @Autowired
     private BoardService boardService;
-
     @Autowired
     private GameService gameService;
-
     @Autowired
     private PlayerRepository playerRepository;
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
 
-    public Player create(String nickname, PlayerType playerType, Side side) {
-        return playerRepository.save(Player.builder()
-                .nickname(nickname)
-                .type(playerType)
-                .side(side)
-                .build());
+    public Player create(PlayerRequest player) {
+        return playerRepository.save(new Player()
+                .setFirstName(player.getFirstName())
+                .setLastName(player.getLastName())
+                .setNickname(player.getNickname())
+                .setPassword(bCryptPasswordEncoder.encode(player.getPassword()))
+                .setRole(Role.fromName(player.getRole()))
+                .setType(PlayerType.HUMAN)
+        );
     }
 
-    public Player findPlayerByNickname(String nickname) throws PlayerNotFoundException {
-        return playerRepository.findByNickname(nickname).orElseThrow(() ->
-                new PlayerNotFoundException("Player not found with nickname='" + nickname +  "'"));
+    public Player update(Player player) {
+        return playerRepository.save(player);
+    }
+
+    public Player findPlayerByNickname(String nickname) {
+        return playerRepository.findByNickname(nickname);
     }
 
     public Player findPlayerById(int id) throws PlayerNotFoundException {
@@ -98,4 +116,26 @@ public class PlayerService {
         game.setCurrentPlayer(opponent);
         return game;
     }
+
+    public void setPlayerSide(String nickname, Side side) throws PlayerNotFoundException {
+        ofNullable(playerRepository.findByNickname(nickname)).ifPresent(p -> {
+            p.setSide(side);
+            playerRepository.save(p);
+        });
+    }
+
+    @Override
+    @Transactional
+    public UserDetails loadUserByUsername(String nickname) throws UsernameNotFoundException {
+        Player player = findPlayerByNickname(nickname);
+        if (player == null) {
+            throw new UsernameNotFoundException("Nickname " + nickname + " not found.");
+        }
+
+        Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
+        grantedAuthorities.add(new SimpleGrantedAuthority(player.getRole().name()));
+
+        return new org.springframework.security.core.userdetails.User(player.getNickname(), player.getPassword(), player.isActive(), true, true, true, grantedAuthorities);
+    }
+
 }

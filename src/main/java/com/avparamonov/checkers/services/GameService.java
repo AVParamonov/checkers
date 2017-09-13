@@ -1,18 +1,23 @@
 package com.avparamonov.checkers.services;
 
+import com.avparamonov.checkers.dto.GameRequest;
 import com.avparamonov.checkers.exceptions.GameNotFoundException;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.Checker;
 import com.avparamonov.checkers.model.Game;
 import com.avparamonov.checkers.model.GameType;
+import com.avparamonov.checkers.model.Side;
 import com.avparamonov.checkers.model.db.entity.Player;
+import com.avparamonov.checkers.model.db.repository.PlayerRepository;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.avparamonov.checkers.model.GameStatus.*;
-import static com.avparamonov.checkers.model.Side.WHITE;
+import static com.avparamonov.checkers.model.GameStatus.FINISHED;
+import static com.avparamonov.checkers.model.GameStatus.READY;
+import static java.util.Optional.ofNullable;
 
 /**
  * Game service.
@@ -23,28 +28,39 @@ import static com.avparamonov.checkers.model.Side.WHITE;
 public class GameService {
 
     @Autowired
-    private PlayerService playerService;
-
+    private PlayerRepository playerRepository;
     @Autowired
     private BoardService boardService;
 
     private Map<String, Game> currentGames = new HashMap<>();
 
-    public Game createGame(String nickname1, String nickname2, GameType gameType) throws PlayerNotFoundException {
+
+    public Game createGame(GameRequest gameRequest) throws PlayerNotFoundException {
         String gameId = UUID.randomUUID().toString();
-        Player player1 = playerService.findPlayerByNickname(nickname1);
-        Player player2 = playerService.findPlayerByNickname(nickname2);
+
+        val gameType = GameType.valueOf(gameRequest.getGameType().toUpperCase());
+
+        Player whiteCheckersPlayer = ofNullable(playerRepository.findByNickname(gameRequest.getWhiteCheckersNickname()))
+                .orElseThrow(() -> new PlayerNotFoundException("Player with nickname " + gameRequest.getWhiteCheckersNickname() + "not found"));
+        whiteCheckersPlayer.setSide(Side.WHITE);
+
+        Player blackCheckersPlayer = ofNullable(playerRepository.findByNickname(gameRequest.getWhiteCheckersNickname()))
+                .orElseThrow(() -> new PlayerNotFoundException("Player with nickname " + gameRequest.getBlackCheckersNickname() + "not found"));
+        blackCheckersPlayer.setSide(Side.BLACK);
+
+        playerRepository.save(whiteCheckersPlayer);
+        playerRepository.save(blackCheckersPlayer);
+
         int boardSize = gameType.getSize();
 
-        Game game = Game.builder()
-                .id(gameId)
-                .board(new Checker[boardSize][boardSize])
-                .player1(player1)
-                .player2(player2)
-                .type(gameType)
-                .status(READY)
-                .currentPlayer(player1.getSide() == WHITE ? player1 : player2)
-                .build();
+        Game game = new Game()
+                .setId(gameId)
+                .setBoard(new Checker[boardSize][boardSize])
+                .setPlayer1(whiteCheckersPlayer)
+                .setPlayer2(blackCheckersPlayer)
+                .setType(gameType)
+                .setStatus(READY)
+                .setCurrentPlayer(whiteCheckersPlayer);
 
         boardService.init(game.getBoard());
         currentGames.put(gameId, game);

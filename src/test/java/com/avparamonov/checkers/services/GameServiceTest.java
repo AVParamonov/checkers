@@ -1,9 +1,11 @@
 package com.avparamonov.checkers.services;
 
 import com.avparamonov.checkers.Application;
+import com.avparamonov.checkers.dto.GameRequest;
+import com.avparamonov.checkers.dto.PlayerRequest;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.*;
-import com.avparamonov.checkers.model.db.dao.PlayerRepository;
+import com.avparamonov.checkers.model.db.repository.PlayerRepository;
 import com.avparamonov.checkers.model.db.entity.Player;
 import org.junit.After;
 import org.junit.Assert;
@@ -37,16 +39,27 @@ public class GameServiceTest {
 
     @Before
     public void setUp() throws PlayerNotFoundException {
-        player1 = playerService.create("Tom", PlayerType.HUMAN, Side.WHITE);
-        player2 = playerService.create("Jerry", PlayerType.COMPUTER, Side.BLACK);
-        game = gameService.createGame(player1.getNickname(), player2.getNickname(), GameType.NORMAL);
+        player1 = playerService.create(new PlayerRequest().setNickname("Tom").setRole("USER").setPassword("passwd"));
+        player2 = playerService.create(new PlayerRequest().setNickname("Jerry").setRole("USER").setPassword("passwd"));
+        playerService.setPlayerSide("Tom", Side.WHITE);
+        playerService.setPlayerSide("Jerry", Side.BLACK);
+        GameRequest gameRequest = new GameRequest()
+                .setGameType(GameType.NORMAL.name())
+                .setWhiteCheckersNickname(player1.getNickname())
+                .setBlackCheckersNickname(player2.getNickname());
+        game = gameService.createGame(gameRequest);
     }
 
     @Test
     public void testCreateGame() throws Exception {
         gameService.getCurrentGames().clear();
 
-        game = gameService.createGame(player1.getNickname(), player2.getNickname(), GameType.NORMAL);
+        GameRequest gameRequest = new GameRequest()
+                .setGameType(GameType.NORMAL.name())
+                .setWhiteCheckersNickname(player1.getNickname())
+                .setBlackCheckersNickname(player2.getNickname());
+
+        game = gameService.createGame(gameRequest);
 
         Assert.assertNotNull(game.getId());
         Assert.assertNotNull(game.getBoard());
