@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Checkers Game page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="../static/css/main.css" th:href="@{/css/main.css}"/>
+    <script type="text/javascript" src="/webjars/jquery/3.2.1/jquery.min.js"></script>
+    <!--<script type="text/javascript" th:src="@{/js/client.js}"></script>-->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        var Game;
+        var currentGame = [[${newGame}]];
+        console.log(currentGame);
+
+        $(document).ready(function () {
+            console.log('ready');
+
+            Game = {
+                board: null,
+                cellsElement: $('div.cells'),
+                dictionary: ["0vmin", "10vmin", "20vmin", "30vmin", "40vmin", "50vmin", "60vmin", "70vmin", "80vmin", "90vmin"],
+                initialize: function (game) {
+                    this.board = game.board;
+                    for (row in this.board) {
+                        for (col in this.board[row]) {
+                            if (row % 2 === col % 2) {
+                                this.cellsElement.append("<div class='cell' id='" + row + col + "' style='bottom:" + this.dictionary[row] + ";left:" + this.dictionary[col] + ";'></div>");
+                            }
+                        }
+                    }
+                    Game.drawCheckers(game);
+                },
+                drawCheckers: function (game) {
+                    $('.white_checkers').empty();
+                    $('.black_checkers').empty();
+                    currentGame = game;
+                    this.board = game.board;
+                    for (row in this.board) {
+                        for (col in this.board[row]) {
+                            var checker = this.board[row][col];
+                            if (checker) {
+                                var side = checker.side['$name'] ? checker.side['$name'] : checker.side.label;
+                                $('.' + side.toLowerCase() + '_checkers').append("<div class='checker' id='checker" + checker.row + checker.col + "' style='bottom:" + this.dictionary[row] + ";left:" + this.dictionary[col] + ";'></div>");
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (currentGame) {
+                console.log('currentGame', currentGame);
+                Game.initialize(currentGame);
+            }
+        });
+
+        $(document).click(function (e) {
+            console.log('click', e.target);
+            var element = $(e.target);
+            if (element.attr("class") === 'checker') {
+                console.log('checker', element);
+                var selected;
+                var playerCheckers = element.parent().attr("class").split(' ')[0];
+                console.log('playerCheckers', playerCheckers);
+                var side = currentGame.currentPlayer.side['$name'] ? currentGame.currentPlayer.side['$name'] : currentGame.currentPlayer.side.label;
+                var isPlayerTurn = (playerCheckers === side.toLowerCase() + "_checkers");
+                if (isPlayerTurn) {
+                    console.log('playerTurn', playerCheckers);
+                    if (element.hasClass('selected')) selected = true;
+                    $('.checker').each(function (index) {
+                        $('.checker').eq(index).removeClass('selected')
+                    });
+                    if (!selected) {
+                        element.addClass('selected');
+                    }
+                }
+            } else if (element.attr("class") === 'cell') {
+                if ($('.selected').length !== 0) {
+                    var fromPosition = $('.selected').attr("id").replace(/checker/, '');
+                    var toPosition = element.attr("id");
+                    console.log('fromPosition', fromPosition);
+                    console.log('toPosition', toPosition);
+                    if (fromPosition && toPosition) {
+                        makeMove(currentGame.id, currentGame.currentPlayer.id, fromPosition, toPosition).done(function (data) {
+                            console.log('Move done', data);
+                            Game.drawCheckers(data);
+                        });
+                    }
+                }
+            }
+        });
+
+        function createNewGame() {
+            $.post(
+                'checkers/v1/game',
+                {
+                    whiteSideNickname: $("#whiteSideNickname").val(),
+                    blackSideNickname: $("#blackSideNickname").val(),
+                    gameType: $("#gameType").val()
+                }
+            );
+        }
+
+        function makeMove(gameId, playerId, fromCell, toCell) {
+            var fromRow = parseInt(fromCell.charAt(0));
+            var fromCol = parseInt(fromCell.charAt(1));
+            var toRow = parseInt(toCell.charAt(0));
+            var toCol = parseInt(toCell.charAt(1));
+            var url = 'game/' + gameId + '/player/' + playerId + '/move';
+            return $.post(
+                url,
+                {
+                    fromRow: fromRow,
+                    fromCol: fromCol,
+                    toRow: toRow,
+                    toCol: toCol
+                }
+            );
+        }
+        /*]]>*/
+    </script>
+</head>
+<body>
+
+    <!--<div class="container">-->
+        <!--<div class="row">-->
+            <!--<div class="col-md-5">-->
+                <!--<form autocomplete="off" name="gameRequest" action="#" th:action="@{/checkers/v1/game}" th:object="${gameRequest}" method="post" class="form-horizontal" role="form">-->
+                <!--<h2>Game</h2>-->
+                    <!--<div class="form-group">-->
+                        <!--<div class="col-sm-9">-->
+                            <!--<input type="text" name="whiteSideNickname" placeholder="White Side Player" class="form-control"/>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <!--<div class="form-group">-->
+                        <!--<div class="col-sm-9">-->
+                            <!--<input type="text" name="blackSideNickname" placeholder="Black Side Player" class="form-control"/>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <!--<div class="form-group">-->
+                        <!--<div class="col-sm-9">-->
+                            <!--<label>-->
+                                <!--<select name="gameType">-->
+                                    <!--<option th:value="Normal">Normal</option>-->
+                                    <!--<option th:value="International">International</option>-->
+                                <!--</select>-->
+                            <!--</label>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <!--<div class="form-group">-->
+                        <!--<div class="col-sm-9">-->
+                            <!--<button type="submit" class="btn btn-primary btn-block">Start New Game</button>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</form>-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</div>-->
+
+<div id="board">
+    <div class="cells"></div>
+    <div class="checkers">
+        <div class="white_checkers">
+        </div>
+        <div class="black_checkers">
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

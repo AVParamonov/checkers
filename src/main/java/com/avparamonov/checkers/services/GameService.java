@@ -40,12 +40,12 @@ public class GameService {
 
         val gameType = GameType.valueOf(gameRequest.getGameType().toUpperCase());
 
-        Player whiteCheckersPlayer = ofNullable(playerRepository.findByNickname(gameRequest.getWhiteCheckersNickname()))
-                .orElseThrow(() -> new PlayerNotFoundException("Player with nickname " + gameRequest.getWhiteCheckersNickname() + "not found"));
+        Player whiteCheckersPlayer = ofNullable(playerRepository.findByNickname(gameRequest.getWhiteSideNickname()))
+                .orElseThrow(() -> new PlayerNotFoundException("Player with nickname " + gameRequest.getWhiteSideNickname() + " not found"));
         whiteCheckersPlayer.setSide(Side.WHITE);
 
-        Player blackCheckersPlayer = ofNullable(playerRepository.findByNickname(gameRequest.getWhiteCheckersNickname()))
-                .orElseThrow(() -> new PlayerNotFoundException("Player with nickname " + gameRequest.getBlackCheckersNickname() + "not found"));
+        Player blackCheckersPlayer = ofNullable(playerRepository.findByNickname(gameRequest.getBlackSideNickname()))
+                .orElseThrow(() -> new PlayerNotFoundException("Player with nickname " + gameRequest.getBlackSideNickname() + " not found"));
         blackCheckersPlayer.setSide(Side.BLACK);
 
         playerRepository.save(whiteCheckersPlayer);

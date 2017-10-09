@@ -26,7 +26,7 @@ public class LoginController {
     private SecurityService securityService;
 
 
-    @RequestMapping(value={Api.V1.LOGIN}, method = RequestMethod.GET)
+    @RequestMapping(value = Api.V1.LOGIN, method = RequestMethod.GET)
     public ModelAndView login() {
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("login");
@@ -52,10 +52,17 @@ public class LoginController {
             modelAndView.setViewName("registration");
         } else {
             playerService.create(player);
-            modelAndView.addObject("gameRequest", new GameRequest());
-            modelAndView.setViewName("home");
             securityService.autoLogin(player.getNickname(), player.getPassword());
+            modelAndView.setViewName("redirect:" + Api.ROOT_PATH + Api.V1.HOME);
         }
+        return modelAndView;
+    }
+
+    @RequestMapping(value = Api.V1.HOME, method = RequestMethod.GET)
+    public ModelAndView home() {
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.addObject("gameRequest", new GameRequest());
+        modelAndView.setViewName("home");
         return modelAndView;
     }
 

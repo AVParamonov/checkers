@@ -45,8 +45,8 @@ public class GameServiceTest {
         playerService.setPlayerSide("Jerry", Side.BLACK);
         GameRequest gameRequest = new GameRequest()
                 .setGameType(GameType.NORMAL.name())
-                .setWhiteCheckersNickname(player1.getNickname())
-                .setBlackCheckersNickname(player2.getNickname());
+                .setWhiteSideNickname(player1.getNickname())
+                .setBlackSideNickname(player2.getNickname());
         game = gameService.createGame(gameRequest);
     }
 
@@ -56,8 +56,8 @@ public class GameServiceTest {
 
         GameRequest gameRequest = new GameRequest()
                 .setGameType(GameType.NORMAL.name())
-                .setWhiteCheckersNickname(player1.getNickname())
-                .setBlackCheckersNickname(player2.getNickname());
+                .setWhiteSideNickname(player1.getNickname())
+                .setBlackSideNickname(player2.getNickname());
 
         game = gameService.createGame(gameRequest);
 

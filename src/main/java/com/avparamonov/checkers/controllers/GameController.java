@@ -5,16 +5,20 @@ import com.avparamonov.checkers.exceptions.GameNotFoundException;
 import com.avparamonov.checkers.exceptions.PlayerNotFoundException;
 import com.avparamonov.checkers.model.Game;
 import com.avparamonov.checkers.services.GameService;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
 
-@RestController
+@Controller
 @RequestMapping(value = Api.ROOT_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
 public class GameController {
 
@@ -22,9 +26,19 @@ public class GameController {
     private GameService gameService;
 
     @RequestMapping(value = Api.V1.GAME, method = RequestMethod.POST)
-    public Game newGame(@Valid GameRequest gameRequest) throws PlayerNotFoundException {
+    public ModelAndView newGame(@Valid GameRequest gameRequest, BindingResult bindingResult) throws PlayerNotFoundException {
+        ModelAndView modelAndView = new ModelAndView();
 
-        return gameService.createGame(gameRequest);
+        if (bindingResult.hasErrors()) {
+            modelAndView.setViewName("game");
+            return modelAndView;
+        }
+        val game = gameService.createGame(gameRequest);
+
+        modelAndView.addObject("newGame", game);
+        modelAndView.setViewName("game");
+
+        return modelAndView;
     }
 
     @RequestMapping(value = Api.V1.GAME, method = RequestMethod.GET)

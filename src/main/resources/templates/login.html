@@ -4,8 +4,8 @@
 
 <head>
     <title>Login page</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
-    <script type="text/javascript" src="webjars/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="/webjars/jquery/3.2.1/jquery.min.js"></script>
 </head>
 
 <body>
@@ -15,26 +15,27 @@
             <form autocomplete="on" action="#" th:action="@{/checkers/v1/login}" method="post" class="form-horizontal" role="form">
                 <h2>Login Form</h2>
                 <div class="form-group">
+                    <div class="col-sm-9"></div>
+                </div>
+                <div class="form-group">
                     <div class="col-sm-9">
-                        <label></label>
-                        <input type="text" id="nickname" name="nickname" th:placeholder="Nickname" class="form-control" autofocus="autofocus"/>
+                        <input type="text" id="nickname" name="nickname" placeholder="Nickname" class="form-control" autofocus="autofocus"/>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-sm-9">
-                        <label></label>
-                        <input type="password" id="password" name="password" th:placeholder="Password" class="form-control"/>
+                        <input type="password" id="password" name="password" placeholder="Password" class="form-control"/>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-sm-9" align="center">
-                        <label th:if="${param.error}" style="font-size:20; color: #FF1C19;">Nickname or Password invalid</label>
+                        <label th:if="${param.error}" style="font-size:20; color:#FF1C19;">Nickname or Password invalid</label>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-sm-9">
                         <button type="submit" class="btn btn-primary btn-block">Login</button>
-                        <h4 class="text-center"><a th:href="@{/checkers/v1/registration}">Create an account</a></h4>
+                        <h5 class="text-center"><a th:href="@{/checkers/v1/registration}">Create an account</a></h5>
                     </div>
                 </div>
             </form>
@@ -43,21 +44,3 @@
 </div>
 </body>
 </html>
-
-<!--<!DOCTYPE html>-->
-<!--<html xmlns:th="http://www.thymeleaf.org">-->
-<!--<head>-->
-    <!--<title>Login page</title>-->
-<!--</head>-->
-<!--<body>-->
-<!--<h1>Login page</h1>-->
-<!--<p th:if="${loginError}" class="error">Wrong user or password</p>-->
-<!--<form th:action="@{/login.html}" method="post">-->
-    <!--<label for="username">Username</label>:-->
-    <!--<input type="text" id="username" name="username" autofocus="autofocus" /> <br />-->
-    <!--<label for="password">Password</label>:-->
-    <!--<input type="password" id="password" name="password" /> <br />-->
-    <!--<input type="submit" value="Log in" />-->
-<!--</form>-->
-<!--</body>-->
-<!--</html>-->

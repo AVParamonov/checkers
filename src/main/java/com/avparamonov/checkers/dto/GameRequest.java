@@ -14,10 +14,10 @@ import org.hibernate.validator.constraints.NotBlank;
 public class GameRequest {
 
     @NotBlank(message = "Please provide already registered nickname")
-    String whiteCheckersNickname;
+    String whiteSideNickname;
 
     @NotBlank(message = "Please provide already registered nickname")
-    String blackCheckersNickname;
+    String blackSideNickname;
 
     @NotBlank(message = "Please provide type of new Game")
     String gameType;

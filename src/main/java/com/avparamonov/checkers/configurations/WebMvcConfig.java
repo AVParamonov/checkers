@@ -11,10 +11,10 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/game").setViewName("game");
-        registry.addViewController("/").setViewName("game");
-        registry.addViewController("/registration").setViewName("registration");
+        registry.addViewController("/").setViewName("login");
         registry.addViewController("/login").setViewName("login");
+        registry.addViewController("/registration").setViewName("registration");
+        registry.addViewController("/game").setViewName("game");
     }
 
     @Bean
