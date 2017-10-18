@@ -33,20 +33,23 @@ public class GameServiceTest {
     @Autowired
     private PlayerRepository playerRepository;
 
-    private Player player1;
-    private Player player2;
+    private Player whiteSidePlayer;
+    private Player blackSidePlayer;
+    private GameRequest gameRequest;
     private Game game;
 
     @Before
     public void setUp() throws PlayerNotFoundException {
-        player1 = playerService.create(new PlayerRequest().setNickname("Tom").setRole("USER").setPassword("passwd"));
-        player2 = playerService.create(new PlayerRequest().setNickname("Jerry").setRole("USER").setPassword("passwd"));
+        whiteSidePlayer = playerService.create(new PlayerRequest().setNickname("Tom").setRole("USER").setPassword("passwd"));
+        blackSidePlayer = playerService.create(new PlayerRequest().setNickname("Jerry").setRole("USER").setPassword("passwd"));
         playerService.setPlayerSide("Tom", Side.WHITE);
         playerService.setPlayerSide("Jerry", Side.BLACK);
-        GameRequest gameRequest = new GameRequest()
+        whiteSidePlayer = playerRepository.findOne(whiteSidePlayer.getId());
+        blackSidePlayer = playerRepository.findOne(blackSidePlayer.getId());
+        gameRequest = new GameRequest()
                 .setGameType(GameType.NORMAL.name())
-                .setWhiteSideNickname(player1.getNickname())
-                .setBlackSideNickname(player2.getNickname());
+                .setWhiteSideNickname(whiteSidePlayer.getNickname())
+                .setBlackSideNickname(blackSidePlayer.getNickname());
         game = gameService.createGame(gameRequest);
     }
 
@@ -54,97 +57,92 @@ public class GameServiceTest {
     public void testCreateGame() throws Exception {
         gameService.getCurrentGames().clear();
 
-        GameRequest gameRequest = new GameRequest()
-                .setGameType(GameType.NORMAL.name())
-                .setWhiteSideNickname(player1.getNickname())
-                .setBlackSideNickname(player2.getNickname());
+        Game newGame = gameService.createGame(gameRequest);
 
-        game = gameService.createGame(gameRequest);
-
-        Assert.assertNotNull(game.getId());
-        Assert.assertNotNull(game.getBoard());
-        Assert.assertEquals(player1, game.getPlayer1());
-        Assert.assertEquals(player2, game.getPlayer2());
-        Assert.assertEquals(game, gameService.findById(game.getId()));
+        Assert.assertNotNull(newGame.getId());
+        Assert.assertNotNull(newGame.getBoard());
+        Assert.assertEquals(whiteSidePlayer, newGame.getWhiteSidePlayer());
+        Assert.assertEquals(blackSidePlayer, newGame.getBlackSidePlayer());
+        Assert.assertEquals(newGame, gameService.findById(newGame.getId()));
     }
 
     @Test
     public void testMakeRegularJump() throws Exception {
 
-        Checker playerChecker = Checker.builder().row(2).col(4).side(Side.WHITE).type(CheckerType.REGULAR).build();
-        Checker enemyChecker = Checker.builder().row(3).col(3).side(Side.BLACK).type(CheckerType.REGULAR).build();
+        Checker whiteChecker = new Checker().setRow(2).setCol(4).setSide(Side.WHITE).setType(CheckerType.REGULAR);
+        Checker blackChecker = new Checker().setRow(3).setCol(3).setSide(Side.BLACK).setType(CheckerType.REGULAR);
 
-        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(playerChecker, enemyChecker));
+        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(whiteChecker, blackChecker));
 
         Move jump = new Move(2, 4, 4, 2);
 
-        Assert.assertEquals(playerChecker, board[2][4]);
-        Assert.assertEquals(enemyChecker, board[3][3]);
+        Assert.assertEquals(whiteChecker, board[2][4]);
+        Assert.assertEquals(blackChecker, board[3][3]);
 
-        playerService.makeMove(player1, jump, game);
+        playerService.makeMove(whiteSidePlayer, jump, game);
 
         Assert.assertNull(board[3][3]);
         Assert.assertNull(board[2][4]);
-        Assert.assertEquals(playerChecker, board[4][2]);
+        Assert.assertEquals(whiteChecker, board[4][2]);
     }
 
     @Test
     public void testMakeRegularMove() throws Exception {
 
-        Checker checker1 = Checker.builder().row(2).col(4).side(Side.WHITE).type(CheckerType.REGULAR).build();
-        Checker checker2 = Checker.builder().row(3).col(3).side(Side.WHITE).type(CheckerType.REGULAR).build();
+        Checker whiteChecker = new Checker().setRow(2).setCol(4).setSide(Side.WHITE).setType(CheckerType.REGULAR);
+        Checker whiteNeighbourChecker = new Checker().setRow(3).setCol(3).setSide(Side.WHITE).setType(CheckerType.REGULAR);
 
-        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(checker1, checker2));
+        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(whiteChecker, whiteNeighbourChecker));
 
         Move move = new Move(2, 4, 3, 5);
 
         Assert.assertNull(board[3][5]);
-        Assert.assertEquals(checker1, board[2][4]);
-        Assert.assertEquals(checker2, board[3][3]);
+        Assert.assertEquals(whiteChecker, board[2][4]);
+        Assert.assertEquals(whiteNeighbourChecker, board[3][3]);
 
-        playerService.makeMove(player1, move, game);
+        playerService.makeMove(whiteSidePlayer, move, game);
 
-        Assert.assertEquals(checker1, board[3][5]);
+        Assert.assertEquals(whiteChecker, board[3][5]);
     }
 
     @Test
     public void testMakeKingJump() throws Exception {
 
-        Checker playerKingChecker = Checker.builder().row(2).col(4).side(Side.WHITE).type(CheckerType.KING).build();
-        Checker enemyChecker = Checker.builder().row(3).col(3).side(Side.BLACK).type(CheckerType.REGULAR).build();
+        Checker whiteKingChecker = new Checker().setRow(2).setCol(4).setSide(Side.WHITE).setType(CheckerType.KING);
+        Checker blackChecker = new Checker().setRow(3).setCol(3).setSide(Side.BLACK).setType(CheckerType.REGULAR);
 
-        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(playerKingChecker, enemyChecker));
+        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(whiteKingChecker, blackChecker));
 
         Move jump = new Move(2, 4, 5, 1);
 
-        Assert.assertEquals(playerKingChecker, board[2][4]);
-        Assert.assertEquals(enemyChecker, board[3][3]);
+        Assert.assertEquals(whiteKingChecker, board[2][4]);
+        Assert.assertEquals(blackChecker, board[3][3]);
 
-        playerService.makeMove(player1, jump, game);
+        playerService.makeMove(whiteSidePlayer, jump, game);
 
         Assert.assertNull(board[3][3]);
         Assert.assertNull(board[2][4]);
-        Assert.assertEquals(playerKingChecker, board[5][1]);
+        Assert.assertEquals(whiteKingChecker, board[5][1]);
     }
 
     @Test
     public void testMakeKingMove() throws Exception {
 
-        Checker playerKingChecker = Checker.builder().row(2).col(4).side(Side.WHITE).type(CheckerType.KING).build();
-        Checker playerOtherChecker = Checker.builder().row(3).col(3).side(Side.WHITE).type(CheckerType.REGULAR).build();
+        Checker whiteKingChecker = new Checker().setRow(2).setCol(4).setSide(Side.WHITE).setType(CheckerType.KING);
+        Checker whiteNeighbourChecker = new Checker().setRow(3).setCol(3).setSide(Side.WHITE).setType(CheckerType.REGULAR);
 
-        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(playerKingChecker, playerOtherChecker));
+        Checker[][] board = fillBoard(makeBoardEmpty(game.getBoard()), Arrays.asList(whiteKingChecker, whiteNeighbourChecker));
 
         Move jump = new Move(2, 4, 0, 2);
 
-        Assert.assertEquals(playerKingChecker, board[2][4]);
-        Assert.assertEquals(playerOtherChecker, board[3][3]);
+        Assert.assertEquals(whiteKingChecker, board[2][4]);
+        Assert.assertEquals(whiteNeighbourChecker, board[3][3]);
 
-        playerService.makeMove(player1, jump, game);
+        playerService.makeMove(whiteSidePlayer, jump, game);
 
         Assert.assertNull(board[2][4]);
-        Assert.assertEquals(playerOtherChecker, board[3][3]);
-        Assert.assertEquals(playerKingChecker, board[0][2]);
+        Assert.assertEquals(whiteNeighbourChecker, board[3][3]);
+        Assert.assertEquals(whiteKingChecker, board[0][2]);
     }
 
     private Checker[][] fillBoard(Checker[][] board, List<Checker> checkers) {

@@ -42,7 +42,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(Api.ROOT_PATH + Api.V1.REGISTRATION).permitAll()
                 .antMatchers(Api.ROOT_PATH + Api.V1.ADMIN + "/**").hasAuthority("ADMIN")
                 .anyRequest()
-                .authenticated().and().csrf().disable()
+                .fullyAuthenticated().and().csrf().disable()
                 .formLogin().loginPage(Api.ROOT_PATH + Api.V1.LOGIN)
                 .failureUrl(Api.ROOT_PATH + Api.V1.LOGIN + "?error=true")
                 .defaultSuccessUrl(Api.ROOT_PATH + Api.V1.HOME)
@@ -50,7 +50,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .passwordParameter("password")
                 .and().logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher(Api.ROOT_PATH + Api.V1.LOGOUT))
-                .logoutSuccessUrl(Api.ROOT_PATH + Api.V1.HOME).and().exceptionHandling()
+                .logoutSuccessUrl(Api.ROOT_PATH + Api.V1.HOME)
+                .and().exceptionHandling()
                 .accessDeniedPage(Api.ROOT_PATH + Api.V1.ERROR);
     }
 

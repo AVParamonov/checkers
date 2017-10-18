@@ -73,6 +73,8 @@ div#board .black_checkers .checker {
     border: 0.5vmin solid #302217; }
 div#board .black_checkers .checker.selected {
     box-shadow: 0 0 10px 5px #16A8C7; }
+div#board .black_checkers .checker.king {
+    border: 1vmin solid #CC0210; }
 div#board .white_checkers .checker {
     position: absolute;
     width: 8vmin;
@@ -89,3 +91,5 @@ div#board .white_checkers .checker {
     border: 0.5vmin solid #302217; }
 div#board .white_checkers .checker.selected {
     box-shadow: 0 0 10px 5px #16A8C7; }
+div#board .white_checkers .checker.king {
+    border: 1vmin solid #CC0210; }

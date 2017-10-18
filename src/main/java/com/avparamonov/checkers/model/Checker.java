@@ -1,6 +1,7 @@
 package com.avparamonov.checkers.model;
 
 import lombok.*;
+import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
 /**
@@ -9,9 +10,9 @@ import lombok.experimental.FieldDefaults;
  * Created by AVParamonov on 25.05.17.
  */
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Checker {
 

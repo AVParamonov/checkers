@@ -8,7 +8,7 @@ public enum Role {
 
     public static Role fromName(String name) {
         if (name != null) {
-            return valueOf(name.toLowerCase());
+            return valueOf(name.toUpperCase());
         }
         return Role.USER;
     }

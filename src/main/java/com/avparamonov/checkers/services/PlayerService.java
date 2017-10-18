@@ -9,19 +9,12 @@ import com.avparamonov.checkers.model.db.repository.PlayerRepository;
 import com.avparamonov.checkers.model.db.entity.Player;
 import com.avparamonov.checkers.dto.PlayerRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.avparamonov.checkers.model.GameStatus.*;
 import static java.util.Optional.ofNullable;
@@ -96,7 +89,7 @@ public class PlayerService {
     }
 
     public Game makeMove(Player player, Move move, Game game) throws MoveNotAllowedException, CheckerNotFoundException {
-        Player opponent = game.getPlayer1().equals(player) ? game.getPlayer2() : game.getPlayer1();
+        Player opponent = game.getWhiteSidePlayer().equals(player) ? game.getBlackSidePlayer() : game.getWhiteSidePlayer();
         List<Move> moves = getAvailableMoves(player, game);
 
         Move exactMove = moves.stream()
@@ -105,6 +98,15 @@ public class PlayerService {
 
         boardService.apply(game.getBoard(), exactMove);
         game.setStatus(IN_PROGRESS);
+
+        List<Move>  nextJumps = moves.stream()
+                .filter(m -> m.getFromCol() == move.getToCol() && m.getFromRow() == move.getToRow())
+                .collect(Collectors.toList());
+
+        if (!nextJumps.isEmpty()) {
+            game.setCurrentPlayerAvailableMoves(nextJumps);
+            return game;
+        }
 
         List<Move> opponentMoves = getAvailableMoves(opponent, game);
         game.setCurrentPlayerAvailableMoves(opponentMoves);

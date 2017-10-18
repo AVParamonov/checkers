@@ -82,15 +82,14 @@ public class BoardService {
         int toCol;
         int rowSign = direction.getSigns()[0];
         int colSign = direction.getSigns()[1];
-        int moveRange = (checker.getType() == REGULAR) ? 2 : board.length;
+        int moveRange = checker.getType() == REGULAR ? 2 : board.length;
 
         for (int i = 1; i < moveRange; i++) {
             toRow = row + i * rowSign;
             toCol = col + i * colSign;
-            if (isAtBoard(board.length, toRow, toCol) && board[toRow][toCol] == null) {
-                if (checker.getType() == KING) {
-                    moves.add(new Move(row, col, toRow, toCol));
-                } else if (isForward(checker.getSide(), row, toRow)) {
+            if (isAtBoard(board.length, toRow, toCol)) {
+                if (board[toRow][toCol] != null) break;
+                if (checker.getType() == KING || isForward(checker.getSide(), row, toRow)) {
                     moves.add(new Move(row, col, toRow, toCol));
                 }
             }
@@ -114,6 +113,7 @@ public class BoardService {
             enemyRow = row + i * rowSign;
             enemyCol = col + i * colSign;
             if (isAtBoard(board.length, enemyRow, enemyCol) && isEnemy(board, row, col, enemyRow, enemyCol)) {
+//                if (board[enemyRow + rowSign][enemyCol + colSign] != null) break;
                 for (int j = i; j < moveRange; j++) {
                     jumpRow = row + (j + 1) * rowSign;
                     jumpCol = col + (j + 1) * colSign;

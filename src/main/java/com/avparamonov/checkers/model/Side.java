@@ -10,8 +10,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum Side {
 
-    WHITE(1, "White"),
-    BLACK(2, "Black");
+    WHITE(1, "white"),
+    BLACK(2, "black");
 
     private int id;
     private String label;

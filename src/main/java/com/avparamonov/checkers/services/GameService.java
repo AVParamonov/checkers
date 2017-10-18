@@ -56,8 +56,8 @@ public class GameService {
         Game game = new Game()
                 .setId(gameId)
                 .setBoard(new Checker[boardSize][boardSize])
-                .setPlayer1(whiteCheckersPlayer)
-                .setPlayer2(blackCheckersPlayer)
+                .setWhiteSidePlayer(whiteCheckersPlayer)
+                .setBlackSidePlayer(blackCheckersPlayer)
                 .setType(gameType)
                 .setStatus(READY)
                 .setCurrentPlayer(whiteCheckersPlayer);

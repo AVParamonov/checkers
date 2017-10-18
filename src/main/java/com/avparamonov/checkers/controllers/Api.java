@@ -19,6 +19,7 @@ public interface Api {
         String ERROR = VERSION + "/error";
         String HOME = VERSION + "/home";
         String GAME = VERSION + "/game";
+        String GAME_BY_ID = VERSION + "/game/{gameId}";
         String MAKE_MOVE = VERSION + "/game/{gameId}/player/{playerId}/move";
     }
 }

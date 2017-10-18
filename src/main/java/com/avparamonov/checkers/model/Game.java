@@ -20,8 +20,8 @@ public class Game {
 
     String id;
     Checker[][] board;
-    Player player1;
-    Player player2;
+    Player whiteSidePlayer;
+    Player blackSidePlayer;
     Player currentPlayer;
     List<Move> currentPlayerAvailableMoves;
     GameType type;

@@ -14,12 +14,11 @@ import org.springframework.stereotype.Service;
 public class CheckerService {
 
     public Checker createWithSideAndCoordinates(Side side, int row, int col) {
-        return Checker.builder()
-                .row(row)
-                .col(col)
-                .type(CheckerType.REGULAR)
-                .side(side)
-                .build();
+        return new Checker()
+                .setRow(row)
+                .setCol(col)
+                .setType(CheckerType.REGULAR)
+                .setSide(side);
     }
 
 }
