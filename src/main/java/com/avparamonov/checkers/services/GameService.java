@@ -78,6 +78,14 @@ public class GameService {
         return game;
     }
 
+    public Game findByPlayer(String nickname) throws GameNotFoundException {
+        return getCurrentGames().values().stream()
+                .filter(v -> v.getWhiteSidePlayer().getNickname().equals(nickname) ||
+                        v.getBlackSidePlayer().getNickname().equals(nickname))
+                .findFirst()
+                .orElseThrow(() -> new GameNotFoundException("Game not found for player with nickname='" + nickname + "'"));
+    }
+
     public Game finish(String gameId) {
         Game game = getCurrentGames().get(gameId);
         game.setStatus(FINISHED);

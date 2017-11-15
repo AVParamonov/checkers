@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="../static/css/main.css" th:href="@{/css/main.css}"/>
     <script type="text/javascript" src="/webjars/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/webjars/sockjs-client/1.0.2/sockjs.min.js"></script>
+    <script type="text/javascript" src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
     <script type="text/javascript" th:src="@{/js/client.js}"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -15,7 +17,6 @@
         var loggedUserNickname = [[${loggedUserNickname}]];
 
         $(document).ready(function () {
-
             Game = {
                 dictionary: ["0vmin", "10vmin", "20vmin", "30vmin", "40vmin", "50vmin", "60vmin", "70vmin", "80vmin", "90vmin"],
                 initialize: function (game, loggedUserNickname) {
@@ -33,11 +34,12 @@
                             }
                         }
                     }
-
+                    connectWS(game.id);
                     Game.drawCheckers(game);
                 },
 
                 drawCheckers: function (game) {
+                    currentGame = game;
                     var side;
                     var type;
                     var styleRow;
@@ -48,14 +50,14 @@
                     $('.white_checkers').empty();
                     $('.black_checkers').empty();
 
-                    for (row in game.board) {
-                        for (col in game.board[row]) {
-                            var checker = game.board[row][col];
+                    for (row in currentGame.board) {
+                        for (col in currentGame.board[row]) {
+                            var checker = currentGame.board[row][col];
                             if (checker) {
                                 side = checker.side['$name'] ? checker.side['$name'] : checker.side.label;
                                 type = checker.type['$name'] ? checker.type['$name'] : checker.type.label;
-                                styleRow = getStyleIndex(row, loggedUserNickname, game);
-                                styleCol = getStyleIndex(col, loggedUserNickname, game);
+                                styleRow = getStyleIndex(row, loggedUserNickname, currentGame);
+                                styleCol = getStyleIndex(col, loggedUserNickname, currentGame);
                                 king = type.toLowerCase() === 'king' ? " king" : "";
                                 div = "<div class='checker" + king + "' id='checker" + checker.row + checker.col + "' style='bottom:" + this.dictionary[styleRow] + ";left:" + this.dictionary[styleCol] + ";'></div>";
                                 $('.' + side.toLowerCase() + '_checkers').append(div);
@@ -71,12 +73,11 @@
         });
 
         $(document).click(function (e) {
-
             var element = $(e.target);
             console.log('click', element);
 
             if (loggedUserNickname !== currentGame.currentPlayer.nickname) {
-                console.log('Now is your opponent turn');
+                alert('Now is your opponent turn');
                 return;
             }
 
@@ -98,11 +99,7 @@
                     var toPosition = element.attr("id");
                     console.log(fromPosition, ' -> ', toPosition);
                     if (fromPosition && toPosition) {
-                        makeMove(currentGame.id, currentGame.currentPlayer.id, fromPosition, toPosition)
-                            .done(function (data) {
-                            console.log('Move successfully done', data);
-                            Game.drawCheckers(data);
-                        });
+                        makeMove(currentGame.id, fromPosition, toPosition);
                     }
                 }
             }
@@ -111,15 +108,39 @@
         /*]]>*/
     </script>
 </head>
+
 <body>
+
+<div>
+    <h2 class="text-center">Checkers</h2>
+</div>
+<div class="container" style="margin-left: 5%" th:with="blackSidePlayerNickname = ${currentGame != null and currentGame.blackSidePlayer != null and currentGame.blackSidePlayer.nickname != null ? currentGame.blackSidePlayer.nickname : ''}">
+    <table class="table" th:with="isBlack = ${loggedUserNickname == blackSidePlayerNickname}">
+        <tbody class="col-sm-3">
+            <tr>
+                <td class="col-sm-1">Opponent: </td>
+                <td class="col-sm-1" th:text="${!isBlack} ? ${blackSidePlayerNickname} : ${currentGame.whiteSidePlayer.nickname}"></td>
+                <td class="col-sm-1" th:bgcolor="${!isBlack} ? '#000000' : '#eeeeee'"></td>
+            </tr>
+            <tr>
+                <td class="col-sm-1">You: </td>
+                <td class="col-sm-1" th:text="${loggedUserNickname}"></td>
+                <td class="col-sm-1" th:bgcolor="${isBlack} ? '#000000' : '#eeeeee'"></td>
+            </tr>
+            <tr>
+                <td class="col-sm-1" th:align="right"><a th:href="@{/checkers/v1/logout}">Log out</a></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
 <div id="board">
     <div class="cells"></div>
     <div class="checkers">
-        <div class="white_checkers">
-        </div>
-        <div class="black_checkers">
-        </div>
+        <div class="white_checkers"></div>
+        <div class="black_checkers"></div>
     </div>
 </div>
 

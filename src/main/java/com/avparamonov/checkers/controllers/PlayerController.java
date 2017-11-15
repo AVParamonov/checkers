@@ -11,7 +11,15 @@ import com.avparamonov.checkers.services.GameService;
 import com.avparamonov.checkers.services.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.security.Principal;
 
 
 @RestController
@@ -24,22 +32,22 @@ public class PlayerController {
     @Autowired
     private GameService gameService;
 
-    @RequestMapping(value = Api.V1.MAKE_MOVE, method = RequestMethod.POST)
-    public Game makeMove(@RequestParam(value = "fromRow") int fromRow,
-                         @RequestParam(value = "fromCol") int fromCol,
-                         @RequestParam(value = "toRow") int toRow,
-                         @RequestParam(value = "toCol") int toCol,
-                         @PathVariable(value = "gameId") String gameId,
-                         @PathVariable(value = "playerId") int playerId)
-            throws PlayerNotFoundException,
-            GameNotFoundException,
-            CheckerNotFoundException,
-            MoveNotAllowedException {
+    @Autowired
+    private SimpMessagingTemplate template;
 
-        Player player = playerService.findPlayerById(playerId);
+    @MessageMapping(Api.V1.GAME_BY_ID)
+    public void move(Message<Object> message, Move move, @DestinationVariable("gameId") String gameId) throws
+            PlayerNotFoundException, GameNotFoundException, CheckerNotFoundException, MoveNotAllowedException {
+
+        Principal principal = message.getHeaders().get(SimpMessageHeaderAccessor.USER_HEADER, Principal.class);
+        String nickname = principal.getName();
+
+        Player player = playerService.findPlayerByNickname(nickname);
         Game game = gameService.findById(gameId);
-        Move move = new Move(fromRow, fromCol, toRow, toCol);
 
-        return playerService.makeMove(player, move, game);
+        Game updatedGame = playerService.makeMove(player, move, game);
+
+        template.convertAndSendToUser(game.getWhiteSidePlayer().getNickname(), "/queue/moves", updatedGame);
+        template.convertAndSendToUser(game.getBlackSidePlayer().getNickname(), "/queue/moves", updatedGame);
     }
 }

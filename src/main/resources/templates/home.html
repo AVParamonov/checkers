@@ -14,7 +14,11 @@
         <div class="row">
             <div class="col-md-5 col-md-offset-4">
                 <form autocomplete="off" name="gameRequest" action="#" th:action="@{/checkers/v1/game}" th:object="${gameRequest}" method="post" class="form-horizontal" role="form">
-                    <h2>Game</h2>
+                    <div class="form-group">
+                        <div class="col-sm-9">
+                            <h2 class="text-center">New Game</h2>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="col-sm-9">
                             <input type="text" name="whiteSideNickname" placeholder="White Side Player" class="form-control"/>

@@ -26,10 +26,8 @@ public class GameServiceTest {
 
     @Autowired
     private GameService gameService;
-
     @Autowired
     private PlayerService playerService;
-
     @Autowired
     private PlayerRepository playerRepository;
 

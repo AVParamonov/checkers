@@ -6,17 +6,13 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
-    color: #333333;
+    color: #6EA6AE;
     font-family: "Lato", Calibri, sans-serif;
     font-size: 16px;
     background-color: #254117; }
-html h2, body h2 {
-    font-size: 1.3em; }
-html h3, body h3 {
-    font-size: 1.1em; }
 html a, body a {
     text-decoration: none;
-    color: #333333;
+    color: #7f879f;
     font-weight: 700; }
 html a:hover, body a:hover {
     text-decoration: underline; }
@@ -44,7 +40,7 @@ div.column {
 
 div#board {
     position: absolute;
-    bottom: calc(50% - 40vmin);
+    bottom: calc(45% - 40vmin);
     left: calc(50% - 40vmin);
     width: 80vmin;
     height: 80vmin;

@@ -29,7 +29,8 @@ public class GameController {
         ModelAndView modelAndView = new ModelAndView();
 
         if (bindingResult.hasErrors()) {
-            modelAndView.setViewName("game");
+            modelAndView.addObject("errorMessage", bindingResult.getFieldError());
+            modelAndView.setViewName("error");
             return modelAndView;
         }
         val game = gameService.createGame(gameRequest);
@@ -52,4 +53,5 @@ public class GameController {
 
         return modelAndView;
     }
+
 }
