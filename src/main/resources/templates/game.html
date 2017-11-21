@@ -114,7 +114,7 @@
 <div>
     <h2 class="text-center">Checkers</h2>
 </div>
-<div class="container" style="margin-left: 5%" th:with="blackSidePlayerNickname = ${currentGame != null and currentGame.blackSidePlayer != null and currentGame.blackSidePlayer.nickname != null ? currentGame.blackSidePlayer.nickname : ''}">
+<div class="container" style="vertical-align:middle; margin-left: 5%" th:with="blackSidePlayerNickname = ${currentGame != null and currentGame.blackSidePlayer != null and currentGame.blackSidePlayer.nickname != null ? currentGame.blackSidePlayer.nickname : ''}">
     <table class="table" th:with="isBlack = ${loggedUserNickname == blackSidePlayerNickname}">
         <tbody class="col-sm-3">
             <tr>
